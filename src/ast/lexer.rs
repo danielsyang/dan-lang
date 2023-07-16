@@ -47,6 +47,28 @@ impl Lexer {
                         literal: number.to_string(),
                     },
                 };
+            } else if Self::is_whitespace(&c) {
+                let consume = self.consume_char();
+                let end = self.current_pos;
+                return Token {
+                    kind: TokenKind::Whitespace,
+                    literal: TokenSpan {
+                        start,
+                        end,
+                        literal: consume.to_string(),
+                    },
+                };
+            } else if let Some(operator) = Self::is_operator(&c) {
+                let consume = self.consume_char();
+                let end = self.current_pos;
+                return Token {
+                    kind: operator,
+                    literal: TokenSpan {
+                        start,
+                        end,
+                        literal: consume.to_string(),
+                    },
+                };
             } else {
                 todo!("Validate other tokens")
             }
@@ -82,5 +104,19 @@ impl Lexer {
 
     fn is_number(c: &char) -> bool {
         c.is_digit(10)
+    }
+
+    fn is_whitespace(c: &char) -> bool {
+        c.is_whitespace()
+    }
+
+    fn is_operator(c: &char) -> Option<TokenKind> {
+        match c {
+            '+' => Some(TokenKind::Plus),
+            '-' => Some(TokenKind::Minus),
+            '*' => Some(TokenKind::Asterisk),
+            '/' => Some(TokenKind::Slash),
+            _ => None,
+        }
     }
 }

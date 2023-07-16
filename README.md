@@ -14,6 +14,6 @@ Next: Be able to tokenize numbers (ie. 10, 233, 244, 512).
 
 - [ ] Lexer
 
-We should be able to tokenize numbers
+We should be able to tokenize numbers, whitespaces and other operators.
 
-Next: Parse whitespaces and other operators
+Next: tokenize parenthesis, equals sign, double equals sign, bg and lt operators.
