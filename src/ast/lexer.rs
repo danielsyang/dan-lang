@@ -33,18 +33,23 @@ impl Lexer {
         }
 
         let start = self.current_pos;
-        let curr = self.consume_char();
-        let number = Self::transform_number(&curr);
-        let end = self.current_pos;
-        let literal = self.input[start..end].to_string();
+        let curr = self.input.chars().nth(self.current_pos);
 
-        return Some(Token {
-            kind: TokenKind::Number(number),
-            literal: TokenSpan {
-                start,
-                end,
-                literal,
-            },
+        return curr.map(|c| {
+            if Self::is_number(&c) {
+                let number = self.consume_number();
+                let end = self.current_pos;
+                return Token {
+                    kind: TokenKind::Number(number),
+                    literal: TokenSpan {
+                        start,
+                        end,
+                        literal: number.to_string(),
+                    },
+                };
+            } else {
+                todo!("Validate other tokens")
+            }
         });
     }
 
@@ -60,11 +65,22 @@ impl Lexer {
         return c;
     }
 
-    fn transform_number(c: &char) -> i64 {
-        c.to_digit(10).unwrap() as i64
+    fn consume_number(&mut self) -> i64 {
+        let mut number: i64 = 0;
+
+        while let Some(c) = self.input.chars().nth(self.current_pos) {
+            if c.is_digit(10) {
+                self.consume_char();
+                number = number * 10 + c.to_digit(10).unwrap() as i64
+            } else {
+                break;
+            }
+        }
+
+        return number;
     }
 
-    fn lookahead() -> bool {
-        todo!("look ahead")
+    fn is_number(c: &char) -> bool {
+        c.is_digit(10)
     }
 }

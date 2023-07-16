@@ -13,6 +13,4 @@ fn main() {
     }
 
     println!("{:?}", tokens);
-
-    println!("Hello, world!");
 }

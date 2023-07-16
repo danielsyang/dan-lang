@@ -8,12 +8,12 @@
 
 We should be able to tokenize simple digits.
 
-```
-1
+Next: Be able to tokenize numbers (ie. 10, 233, 244, 512).
 
-2
+#### 16 July 2023
 
-3
-```
+- [ ] Lexer
 
-Next: Be able to tokenize proper numbers (ie. 10, 233, 244, 512).
+We should be able to tokenize numbers
+
+Next: Parse whitespaces and other operators

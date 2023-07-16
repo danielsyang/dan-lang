@@ -7,6 +7,7 @@ pub enum TokenKind {
     Slash,
     Equals,
     EOF,
+    Whitespace,
 }
 
 #[derive(Debug)]
