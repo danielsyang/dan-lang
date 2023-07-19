@@ -24,11 +24,7 @@ impl Lexer {
             self.current_pos += 1;
             return Some(Token {
                 kind: TokenKind::EOF,
-                literal: TokenSpan {
-                    start: 0,
-                    end: 0,
-                    literal: '\0'.to_string(),
-                },
+                literal: TokenSpan::new(0, 0, '\0'.to_string()),
             });
         }
 
@@ -41,33 +37,21 @@ impl Lexer {
                 let end = self.current_pos;
                 return Token {
                     kind: TokenKind::Number(number),
-                    literal: TokenSpan {
-                        start,
-                        end,
-                        literal: number.to_string(),
-                    },
+                    literal: TokenSpan::new(start, end, number.to_string()),
                 };
             } else if Self::is_whitespace(&c) {
                 let consume = self.consume_char();
                 let end = self.current_pos;
                 return Token {
                     kind: TokenKind::Whitespace,
-                    literal: TokenSpan {
-                        start,
-                        end,
-                        literal: consume.to_string(),
-                    },
+                    literal: TokenSpan::new(start, end, consume.to_string()),
                 };
             } else if let Some(operator) = Self::is_operator(&c) {
                 let consume = self.consume_char();
                 let end = self.current_pos;
                 return Token {
                     kind: operator,
-                    literal: TokenSpan {
-                        start,
-                        end,
-                        literal: consume.to_string(),
-                    },
+                    literal: TokenSpan::new(start, end, consume.to_string()),
                 };
             } else {
                 todo!("Validate other tokens")
