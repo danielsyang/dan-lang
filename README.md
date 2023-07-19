@@ -17,3 +17,14 @@ Next: Be able to tokenize numbers (ie. 10, 233, 244, 512).
 We should be able to tokenize numbers, whitespaces and other operators.
 
 Next: tokenize parenthesis, equals sign, double equals sign, bg and lt operators.
+
+#### 19 July 2023
+
+- [ ] Lexer
+- [ ] Parser
+
+TODO: tokenize parenthesis, equals sign, double equals sign, bg and lt operators.
+
+Current: Writing initial parser to generate AST.
+
+Next: Finalize Lexer and Parser.

@@ -3,8 +3,8 @@ use crate::ast::token::{TokenKind, TokenSpan};
 use super::token::Token;
 
 pub struct Lexer {
-    input: String,
-    current_pos: usize,
+    pub input: String,
+    pub current_pos: usize,
 }
 
 impl Lexer {
