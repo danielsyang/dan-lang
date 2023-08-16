@@ -1,106 +1,117 @@
-use crate::ast::token::{TokenKind, TokenSpan};
+use crate::ast::token::TokenType;
 
 use super::token::Token;
 
 pub struct Lexer {
-    pub input: String,
-    pub current_pos: usize,
+    input: String,
+    position: usize,
 }
 
 impl Lexer {
-    pub fn new(input: String) -> Self {
-        Lexer {
-            current_pos: 0,
-            input,
+    pub fn new(input: &str) -> Self {
+        Self {
+            input: input.to_string(),
+            position: 0,
         }
     }
 
     pub fn next_token(&mut self) -> Option<Token> {
-        if self.input.len() < self.current_pos {
+        if self.input.len() < self.position {
             return None;
         }
-
-        if self.input.len() == self.current_pos {
-            self.current_pos += 1;
-            return Some(Token {
-                kind: TokenKind::EOF,
-                literal: TokenSpan::new(0, 0, '\0'.to_string()),
-            });
+        if self.input.len() == self.position {
+            self.position += 1;
+            return Some(Token::eof());
         }
 
-        let start = self.current_pos;
-        let curr = self.input.chars().nth(self.current_pos);
+        let curr = self.input.chars().nth(self.position);
 
         return curr.map(|c| {
-            if Self::is_number(&c) {
-                let number = self.consume_number();
-                let end = self.current_pos;
-                return Token {
-                    kind: TokenKind::Number(number),
-                    literal: TokenSpan::new(start, end, number.to_string()),
-                };
-            } else if Self::is_whitespace(&c) {
-                let consume = self.consume_char();
-                let end = self.current_pos;
-                return Token {
-                    kind: TokenKind::Whitespace,
-                    literal: TokenSpan::new(start, end, consume.to_string()),
-                };
-            } else if let Some(operator) = Self::is_operator(&c) {
-                let consume = self.consume_char();
-                let end = self.current_pos;
-                return Token {
-                    kind: operator,
-                    literal: TokenSpan::new(start, end, consume.to_string()),
-                };
+            if c.is_alphabetic() {
+                let word = self.consume_word();
+
+                match word.as_str() {
+                    "let" => return Token::new_let(),
+                    _ => return Token::new(TokenType::Variable, word),
+                }
+            } else if c == ' ' {
+                self.consume_char();
+                return Token::whitespace();
+            } else if c == '=' {
+                self.consume_char();
+                return Token::equal_sign();
+            } else if c == ';' {
+                self.consume_char();
+                return Token::semicolon();
+            } else if Self::current_is_operator(c) {
+                self.consume_char();
+                return Token::new(self.consume_operator(), c.to_string());
             } else {
-                todo!("Validate other tokens")
+                self.consume_char();
+                return Token::eof();
             }
         });
     }
 
-    fn consume_char(&mut self) -> char {
+    pub fn consume_char(&mut self) -> char {
         let c = self
             .input
             .chars()
-            .nth(self.current_pos)
-            .expect("Invalid Lexer state, current_pos is larger than input");
+            .nth(self.position)
+            .expect("Invalid lexer state, current position is larger than input");
 
-        self.current_pos += 1;
+        self.position += 1;
 
         return c;
     }
 
-    fn consume_number(&mut self) -> i64 {
-        let mut number: i64 = 0;
+    pub fn consume_word(&mut self) -> String {
+        let mut word = String::from("");
+        let mut curr_char = self.consume_char();
 
-        while let Some(c) = self.input.chars().nth(self.current_pos) {
-            if c.is_digit(10) {
-                self.consume_char();
-                number = number * 10 + c.to_digit(10).unwrap() as i64
-            } else {
-                break;
-            }
+        while curr_char != ' ' {
+            word.push(curr_char);
+            curr_char = self.consume_char();
         }
 
-        return number;
+        // since whitespace is not consumed, decrement pointer, weird situation
+        self.position -= 1;
+
+        return word;
     }
 
-    fn is_number(c: &char) -> bool {
-        c.is_digit(10)
-    }
+    pub fn consume_operator(&mut self) -> TokenType {
+        let c = self.consume_char();
 
-    fn is_whitespace(c: &char) -> bool {
-        c.is_whitespace()
-    }
-
-    fn is_operator(c: &char) -> Option<TokenKind> {
         match c {
-            '+' => Some(TokenKind::Plus),
-            '-' => Some(TokenKind::Minus),
-            '*' => Some(TokenKind::Asterisk),
-            '/' => Some(TokenKind::Slash),
-            _ => None,
+            '+' => TokenType::PlusSign,
+            '-' => TokenType::MinusSign,
+            '*' => TokenType::MultiplicationSign,
+            '/' => TokenType::DivisionSign,
+            _ => panic!("invalid operator"),
         }
+    }
+
+    pub fn current_is_operator(c: char) -> bool {
+        match c {
+            _ => false,
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::ast::lexer::Lexer;
+
+    #[test]
+    fn test_lexer() {
+        let input = "let x = 5 + 5;";
+        let mut lex = Lexer::new(input);
+
+        while let Some(t) = lex.next_token() {
+            println!("{:?}", t);
+        }
+
+        // assert_eq!(1, 2)
     }
 }
