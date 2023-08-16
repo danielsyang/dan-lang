@@ -24,36 +24,34 @@ impl Lexer {
             return Some(Token::eof());
         }
 
-        let curr = self.input.chars().nth(self.position);
+        let curr = self.consume_char();
 
-        return curr.map(|c| {
-            if c.is_alphabetic() {
-                let word = self.consume_word();
+        if curr == ' ' {
+            return Some(Token::whitespace());
+        }
 
-                match word.as_str() {
-                    "let" => return Token::new_let(),
-                    _ => return Token::new(TokenType::Variable, word),
-                }
-            } else if c == ' ' {
-                self.consume_char();
-                return Token::whitespace();
-            } else if c == '=' {
-                self.consume_char();
-                return Token::equal_sign();
-            } else if c == ';' {
-                self.consume_char();
-                return Token::semicolon();
-            } else if Self::current_is_operator(c) {
-                self.consume_char();
-                return Token::new(self.consume_operator(), c.to_string());
-            } else {
-                self.consume_char();
-                return Token::eof();
+        if curr.is_alphabetic() {
+            let word = self.consume_word(curr);
+            match word.as_str() {
+                "let" => return Some(Token::new_let()),
+                _ => return Some(Token::new(TokenType::Variable, word)),
             }
-        });
+        }
+
+        if curr.is_digit(10) {}
+
+        match curr {
+            '=' => Some(Token::equal_sign()),
+            ';' => Some(Token::semicolon()),
+            '+' => Some(Token::new(TokenType::PlusSign, curr.to_string())),
+            '-' => Some(Token::new(TokenType::MinusSign, curr.to_string())),
+            '*' => Some(Token::new(TokenType::MultiplicationSign, curr.to_string())),
+            '/' => Some(Token::new(TokenType::DivisionSign, curr.to_string())),
+            _ => panic!("token: {} has not been implemented yet.", curr),
+        }
     }
 
-    pub fn consume_char(&mut self) -> char {
+    fn consume_char(&mut self) -> char {
         let c = self
             .input
             .chars()
@@ -65,53 +63,28 @@ impl Lexer {
         return c;
     }
 
-    pub fn consume_word(&mut self) -> String {
+    fn consume_word(&mut self, mut initial_char: char) -> String {
         let mut word = String::from("");
-        let mut curr_char = self.consume_char();
 
-        while curr_char != ' ' {
-            word.push(curr_char);
-            curr_char = self.consume_char();
+        loop {
+            word.push(initial_char);
+
+            let peek = self.input.chars().nth(self.position);
+            match peek {
+                Some(' ') => {
+                    break;
+                }
+                _ => {
+                    // do nothing
+                }
+            }
+
+            initial_char = self.consume_char();
         }
-
-        // since whitespace is not consumed, decrement pointer, weird situation
-        self.position -= 1;
 
         return word;
-    }
-
-    pub fn consume_operator(&mut self) -> TokenType {
-        let c = self.consume_char();
-
-        match c {
-            '+' => TokenType::PlusSign,
-            '-' => TokenType::MinusSign,
-            '*' => TokenType::MultiplicationSign,
-            '/' => TokenType::DivisionSign,
-            _ => panic!("invalid operator"),
-        }
-    }
-
-    pub fn current_is_operator(c: char) -> bool {
-        match c {
-            _ => false,
-        }
     }
 }
 
 #[cfg(test)]
-mod test {
-    use crate::ast::lexer::Lexer;
-
-    #[test]
-    fn test_lexer() {
-        let input = "let x = 5 + 5;";
-        let mut lex = Lexer::new(input);
-
-        while let Some(t) = lex.next_token() {
-            println!("{:?}", t);
-        }
-
-        // assert_eq!(1, 2)
-    }
-}
+mod test {}
