@@ -1,4 +1,4 @@
-use crate::ast::token::TokenType;
+use crate::lexer::token::TokenType;
 
 use super::token::Token;
 

@@ -1,9 +1,9 @@
-use ast::{
+use lexer::{
     lexer::Lexer,
     token::{Token, TokenType},
 };
 
-mod ast;
+mod lexer;
 
 fn main() {
     // let input = "let x = 55 + 5;";
