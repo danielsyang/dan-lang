@@ -6,18 +6,20 @@ use ast::{
 mod ast;
 
 fn main() {
-    let input = "let x = 5 + 5;";
+    // let input = "let x = 55 + 5;";
+    let input = "
+    if (5 < 10) {
+        return true;
+    } else if (1 != 1) {
+        return false;
+    } else if (1 == 2) {
+        return false;
+    } else {
+        return 1;
+    }
+    ";
 
     let mut lex = Lexer::new(input);
-    let result = vec![
-        Token::new_let(),
-        Token::new(TokenType::Variable, "x".to_string()),
-        Token::equal_sign(),
-        Token::new(TokenType::Int(5), "5".to_string()),
-        Token::new(TokenType::PlusSign, "+".to_string()),
-        Token::new(TokenType::Int(5), "5".to_string()),
-        Token::semicolon(),
-    ];
 
     let mut tokens: Vec<Token> = vec![];
 
@@ -28,5 +30,5 @@ fn main() {
         }
     }
 
-    assert_eq!(tokens, result)
+    println!("{:?}", tokens)
 }

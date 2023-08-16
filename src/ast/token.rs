@@ -1,24 +1,40 @@
 #[derive(Debug, PartialEq)]
 pub enum TokenType {
-    Comman,
+    Comma,
     Semicolon,
-    Illegal,
+    // Illegal,
     EOF,
-    Variable,
+    Indentifier,
     Int(i64),
     LeftParen,
     RightParen,
     LeftBrace,
     RightBrace,
-    Function,
+
+    // keywords
     LET,
-    EqualSign,
+    Function,
+    True,
+    False,
+    If,
+    Else,
+    Return,
+
+    // whitespace is a generic term that represents ' ', or '\n', or '\r'
     Whitespace,
+
     // math
     PlusSign,
     MinusSign,
     MultiplicationSign,
-    DivisionSign,
+    SlashSign,
+    EqualSign,
+    // -> !
+    BangSign,
+    LT,
+    GT,
+    Eq,
+    NotEq,
 }
 
 #[derive(Debug, PartialEq)]
@@ -64,6 +80,67 @@ impl Token {
         Self {
             kind: TokenType::Semicolon,
             literal: ";".to_string(),
+        }
+    }
+
+    pub fn left_paren() -> Self {
+        Self {
+            kind: TokenType::LeftParen,
+            literal: "(".to_string(),
+        }
+    }
+
+    pub fn right_paren() -> Self {
+        Self {
+            kind: TokenType::RightParen,
+            literal: ")".to_string(),
+        }
+    }
+
+    pub fn left_brace() -> Self {
+        Self {
+            kind: TokenType::LeftBrace,
+            literal: "{".to_string(),
+        }
+    }
+
+    pub fn right_brace() -> Self {
+        Self {
+            kind: TokenType::RightBrace,
+            literal: "}".to_string(),
+        }
+    }
+
+    pub fn function() -> Self {
+        Self {
+            kind: TokenType::Function,
+            literal: "fn".to_string(),
+        }
+    }
+
+    pub fn comma() -> Self {
+        Self {
+            kind: TokenType::Comma,
+            literal: ",".to_string(),
+        }
+    }
+
+    pub fn bang() -> Self {
+        Self {
+            kind: TokenType::BangSign,
+            literal: "!".to_string(),
+        }
+    }
+    pub fn lt() -> Self {
+        Self {
+            kind: TokenType::LT,
+            literal: "<".to_string(),
+        }
+    }
+    pub fn gt() -> Self {
+        Self {
+            kind: TokenType::GT,
+            literal: ">".to_string(),
         }
     }
 }
