@@ -143,4 +143,18 @@ impl Token {
             literal: ">".to_string(),
         }
     }
+
+    pub fn int(n: i64) -> Self {
+        Self {
+            kind: TokenType::Int(n),
+            literal: n.to_string(),
+        }
+    }
+
+    pub fn identifier(name: String) -> Self {
+        Self {
+            kind: TokenType::Indentifier,
+            literal: name,
+        }
+    }
 }

@@ -40,13 +40,13 @@ impl Lexer {
                 "return" => return Some(Token::new(TokenType::Return, word)),
                 "if" => return Some(Token::new(TokenType::If, word)),
                 "else" => return Some(Token::new(TokenType::Else, word)),
-                _ => return Some(Token::new(TokenType::Indentifier, word)),
+                _ => return Some(Token::identifier(word)),
             }
         }
 
         if curr.is_digit(10) {
-            let (number, literal) = self.consume_number(curr);
-            return Some(Token::new(TokenType::Int(number), literal));
+            let number = self.consume_number(curr);
+            return Some(Token::int(number));
         }
 
         match curr {
@@ -134,12 +134,10 @@ impl Lexer {
         return word;
     }
 
-    fn consume_number(&mut self, mut initial_char: char) -> (i64, String) {
+    fn consume_number(&mut self, mut initial_char: char) -> i64 {
         let mut number: i64 = 0;
-        let mut literal = String::from("");
 
         loop {
-            literal.push(initial_char);
             // safely assume we can parse and unwrap because we have validation down below.
             let d = initial_char.to_digit(10).unwrap() as i64;
             number = number * 10 + d;
@@ -158,7 +156,7 @@ impl Lexer {
             initial_char = self.consume_char();
         }
 
-        return (number, literal);
+        return number;
     }
 
     fn skip_whitespace_or_new_line(c: char) -> bool {
@@ -172,9 +170,97 @@ impl Lexer {
 
 #[cfg(test)]
 mod test {
+    use crate::lexer::{
+        lexer::Lexer,
+        token::{Token, TokenType},
+    };
+
+    fn run_tokenizer(mut lex: Lexer) -> Vec<Token> {
+        let mut tokens: Vec<Token> = vec![];
+
+        while let Some(t) = lex.next_token() {
+            match t.kind {
+                TokenType::Whitespace => {}
+                _ => tokens.push(t),
+            }
+        }
+
+        return tokens;
+    }
 
     #[test]
-    fn t() {
-        assert_eq!(' '.is_alphabetic(), true)
+    fn tokenize_let_statement() {
+        let input = "
+            let x = 512;
+            let y = 256;
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::new_let(),
+            Token::identifier("x".to_string()),
+            Token::equal_sign(),
+            Token::int(512),
+            Token::semicolon(),
+            Token::new_let(),
+            Token::identifier("y".to_string()),
+            Token::equal_sign(),
+            Token::int(256),
+            Token::semicolon(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn tokenize_if_else_statement() {
+        let input = "
+            if (x < 10) {
+                return 10;
+            } else if (x > 12) {
+                return 20;
+            } else {
+                return 30;
+            }
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::new(TokenType::If, "if".to_string()),
+            Token::left_paren(),
+            Token::identifier("x".to_string()),
+            Token::lt(),
+            Token::int(10),
+            Token::right_paren(),
+            Token::left_brace(),
+            Token::new(TokenType::Return, "return".to_string()),
+            Token::int(10),
+            Token::semicolon(),
+            Token::right_brace(),
+            Token::new(TokenType::Else, "else".to_string()),
+            Token::new(TokenType::If, "if".to_string()),
+            Token::left_paren(),
+            Token::identifier("x".to_string()),
+            Token::gt(),
+            Token::int(12),
+            Token::right_paren(),
+            Token::left_brace(),
+            Token::new(TokenType::Return, "return".to_string()),
+            Token::int(12),
+            Token::semicolon(),
+            Token::right_brace(),
+            Token::new(TokenType::Else, "else".to_string()),
+            Token::left_brace(),
+            Token::new(TokenType::Return, "return".to_string()),
+            Token::int(30),
+            Token::semicolon(),
+            Token::right_brace(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
     }
 }
