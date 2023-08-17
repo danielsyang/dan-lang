@@ -3,6 +3,7 @@ use lexer::{
     token::{Token, TokenType},
 };
 
+mod ast;
 mod lexer;
 
 fn main() {

@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum TokenType {
     Comma,
     Semicolon,
@@ -37,7 +37,7 @@ pub enum TokenType {
     NotEq,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
     pub kind: TokenType,
     pub literal: String,
