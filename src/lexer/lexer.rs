@@ -248,7 +248,7 @@ mod test {
             Token::right_paren(),
             Token::left_brace(),
             Token::new(TokenType::Return, "return".to_string()),
-            Token::int(12),
+            Token::int(20),
             Token::semicolon(),
             Token::right_brace(),
             Token::new(TokenType::Else, "else".to_string()),
@@ -256,6 +256,41 @@ mod test {
             Token::new(TokenType::Return, "return".to_string()),
             Token::int(30),
             Token::semicolon(),
+            Token::right_brace(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn tokenize_function_statement() {
+        let input = "
+            let a = fn(x, y) { };
+
+            fn myFunc() { }
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::new_let(),
+            Token::identifier("a".to_string()),
+            Token::equal_sign(),
+            Token::function(),
+            Token::left_paren(),
+            Token::identifier("x".to_string()),
+            Token::comma(),
+            Token::identifier("y".to_string()),
+            Token::right_paren(),
+            Token::left_brace(),
+            Token::right_brace(),
+            Token::semicolon(),
+            Token::function(),
+            Token::identifier("myFunc".to_string()),
+            Token::left_paren(),
+            Token::right_paren(),
+            Token::left_brace(),
             Token::right_brace(),
             Token::eof(),
         ];
