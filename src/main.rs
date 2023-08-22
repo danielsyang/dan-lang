@@ -30,6 +30,4 @@ fn main() {
             _ => tokens.push(t),
         }
     }
-
-    println!("{:?}", tokens)
 }

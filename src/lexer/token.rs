@@ -28,7 +28,7 @@ pub enum TokenType {
     MinusSign,
     MultiplicationSign,
     SlashSign,
-    EqualSign,
+    Asssign,
     // -> !
     BangSign,
     LT,
@@ -69,9 +69,9 @@ impl Token {
         }
     }
 
-    pub fn equal_sign() -> Self {
+    pub fn assign_sign() -> Self {
         Self {
-            kind: TokenType::EqualSign,
+            kind: TokenType::Asssign,
             literal: "=".to_string(),
         }
     }

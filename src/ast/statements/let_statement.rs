@@ -3,10 +3,18 @@ use crate::{
     lexer::token::Token,
 };
 
-struct LetStatement {
-    token: Token,
-    name: String,
-    value: Box<dyn Expression>,
+use super::identifier::Identifier;
+
+pub struct LetStatement {
+    pub token: Token,
+    pub name: Identifier,
+    pub value: Box<dyn Expression>,
+}
+
+impl LetStatement {
+    pub fn new(token: Token, name: Identifier, value: Box<dyn Expression>) -> Self {
+        Self { token, name, value }
+    }
 }
 
 impl Statement for LetStatement {

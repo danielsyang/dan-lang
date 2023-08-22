@@ -59,9 +59,9 @@ impl Lexer {
                             self.consume_char();
                             Some(Token::new(TokenType::Eq, "==".to_string()))
                         }
-                        _ => Some(Token::equal_sign()),
+                        _ => Some(Token::assign_sign()),
                     },
-                    None => Some(Token::equal_sign()),
+                    None => Some(Token::assign_sign()),
                 }
             }
             '!' => {
@@ -199,12 +199,12 @@ mod test {
         let expected: Vec<Token> = vec![
             Token::new_let(),
             Token::identifier("x".to_string()),
-            Token::equal_sign(),
+            Token::assign_sign(),
             Token::int(512),
             Token::semicolon(),
             Token::new_let(),
             Token::identifier("y".to_string()),
-            Token::equal_sign(),
+            Token::assign_sign(),
             Token::int(256),
             Token::semicolon(),
             Token::eof(),
@@ -276,7 +276,7 @@ mod test {
         let expected: Vec<Token> = vec![
             Token::new_let(),
             Token::identifier("a".to_string()),
-            Token::equal_sign(),
+            Token::assign_sign(),
             Token::function(),
             Token::left_paren(),
             Token::identifier("x".to_string()),
