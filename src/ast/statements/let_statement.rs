@@ -1,10 +1,11 @@
+use std::any::Any;
+
 use crate::{
     ast::tree::{Expression, Node, Statement},
     lexer::token::Token,
 };
 
 use super::identifier::Identifier;
-
 pub struct LetStatement {
     pub token: Token,
     pub name: Identifier,
@@ -24,5 +25,14 @@ impl Statement for LetStatement {
 impl Node for LetStatement {
     fn token_literal(&self) -> String {
         return self.token.literal.clone();
+    }
+
+    fn string(&self) -> String {
+        format!(
+            "{} {} = {}",
+            self.token_literal(),
+            self.name.token_literal(),
+            self.value.token_literal()
+        )
     }
 }

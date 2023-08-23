@@ -19,4 +19,8 @@ impl Node for ReturnStatement {
     fn token_literal(&self) -> String {
         return self.token.literal.clone();
     }
+
+    fn string(&self) -> String {
+       format!("{} {};", self.token_literal(), self.value.token_literal())
+    }
 }

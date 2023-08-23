@@ -1,10 +1,11 @@
 use crate::{
-    ast::tree::{Node, Statement},
+    ast::tree::{Expression, Node},
     lexer::token::Token,
 };
 
+#[derive(Debug)]
 pub struct Identifier {
-    token: Token,
+    pub token: Token,
     value: String,
 }
 
@@ -12,10 +13,13 @@ impl Node for Identifier {
     fn token_literal(&self) -> String {
         return self.token.literal.clone();
     }
+    fn string(&self) -> String {
+        self.value.clone()
+    }
 }
 
-impl Statement for Identifier {
-    fn statement_node(&self) {}
+impl Expression for Identifier {
+    fn expression_node(&self) {}
 }
 
 impl Identifier {

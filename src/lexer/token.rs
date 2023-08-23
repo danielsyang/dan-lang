@@ -1,10 +1,10 @@
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Eq, Hash)]
 pub enum TokenType {
     Comma,
     Semicolon,
     // Illegal,
     EOF,
-    Indentifier,
+    Identifier,
     Int(i64),
     LeftParen,
     RightParen,
@@ -153,7 +153,7 @@ impl Token {
 
     pub fn identifier(name: String) -> Self {
         Self {
-            kind: TokenType::Indentifier,
+            kind: TokenType::Identifier,
             literal: name,
         }
     }

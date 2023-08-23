@@ -1,5 +1,9 @@
+use std::collections::HashMap;
+
 use crate::{
-    ast::statements::{identifier::Identifier, return_statement::ReturnStatement},
+    ast::statements::{
+        identifier::Identifier, integer_literal::IntegerLiteral, return_statement::ReturnStatement,
+    },
     lexer::{
         lexer::Lexer,
         token::{Token, TokenType},
@@ -7,14 +11,28 @@ use crate::{
 };
 
 use super::{
-    statements::let_statement::LetStatement,
-    tree::{Expression, Statement},
+    statements::{expression_statement::ExpressionStatement, let_statement::LetStatement},
+    tree::{Expression, InfixParseFn, PrefixParseFn, Statement},
 };
 
+enum Precedence {
+    Int = 0,
+    Lowest = 1,
+    Equals = 2,
+    LessGreater = 3,
+    Sum = 4,
+    Product = 5,
+    Prefix = 6,
+    Call = 7,
+}
+
 pub struct Parser {
-    tokens: Vec<Token>,
+    pub tokens: Vec<Token>,
     current_position: usize,
     errors: Vec<String>,
+
+    prefix_parse_fns: HashMap<TokenType, PrefixParseFn>,
+    infix_parse_fns: HashMap<TokenType, InfixParseFn>,
 }
 
 impl Parser {
@@ -37,7 +55,26 @@ impl Parser {
             tokens,
             current_position: 0,
             errors: vec![],
+            prefix_parse_fns: HashMap::new(),
+            infix_parse_fns: HashMap::new(),
         };
+    }
+    // Improve here
+    fn run_parser(mut p: Parser) -> Vec<Box<dyn Statement>> {
+        let mut statments: Vec<Box<dyn Statement>> = vec![];
+        loop {
+            let parsed = p.parse_program();
+            statments.push(parsed);
+            match p.tokens.get(p.current_position) {
+                Some(val) => match val.kind {
+                    TokenType::EOF => break,
+                    _ => {}
+                },
+                _ => panic!("invalid state!!!!"),
+            }
+        }
+
+        return statments;
     }
 
     fn consume_token(&mut self) -> Token {
@@ -73,36 +110,50 @@ impl Parser {
             .kind
     }
 
-    fn parse_let_statement(&mut self, curr: Token) -> LetStatement {
-        if self.expect_next_token(TokenType::Indentifier) {
-            self.set_next_token_error(TokenType::Indentifier);
+    fn parse_let_statement(&mut self, mut curr: Token) -> LetStatement {
+        if self.expect_next_token(TokenType::Identifier) {
+            self.set_next_token_error(TokenType::Identifier);
         }
 
-        let name = Identifier::new(&curr);
-        let let_token = curr;
+        let let_token = curr.clone();
 
-        self.consume_token();
+        curr = self.consume_token();
+
+        let name = Identifier::new(&curr);
 
         if self.expect_next_token(TokenType::Asssign) {
             self.set_next_token_error(TokenType::Asssign);
         }
 
-        let val = self.parse_expression();
+        self.consume_token();
+        curr = self.consume_token();
+
+        let val = self.parse_expression(Precedence::Lowest, curr);
         let st = LetStatement::new(let_token, name, val);
 
+        if self.expect_next_token(TokenType::Semicolon) {
+            self.set_next_token_error(TokenType::Semicolon);
+        }
+
+        self.consume_token();
         return st;
     }
 
     fn parse_return_statement(&self, curr: Token) -> ReturnStatement {
-        let return_token = curr;
+        let return_token = curr.clone();
 
         // if self.expect_next_token() {
         //     self.set_next_token_error()
         // }
-        let val = self.parse_expression();
+        let val = self.parse_expression(Precedence::Int, curr);
+
         let rt = ReturnStatement::new(return_token, val);
 
         return rt;
+    }
+
+    fn parse_expression_statement(&self, curr: Token) -> ExpressionStatement {
+        todo!("parse expression statement")
     }
 
     pub fn parse_program(&mut self) -> Box<dyn Statement> {
@@ -111,7 +162,7 @@ impl Parser {
         match token.kind {
             TokenType::LET => Box::new(self.parse_let_statement(token)),
             TokenType::Return => Box::new(self.parse_return_statement(token)),
-            _ => todo!("not yet implemented"),
+            _ => Box::new(self.parse_expression_statement(token)),
         }
     }
 
@@ -124,26 +175,68 @@ impl Parser {
         self.errors.push(str)
     }
 
-    fn parse_expression(&self) -> Box<dyn Expression> {
-        todo!("todo")
+    fn parse_expression(&self, p: Precedence, curr: Token) -> Box<dyn Expression> {
+        match curr.kind {
+            TokenType::Int(v) => return Box::new(IntegerLiteral::new(curr, v)),
+            _ => panic!("not yet implemented"),
+        }
+        // let val = self.prefix_parse_fns.get(&curr.kind);
+        // match val {
+        //     Some(prefix) => {
+        //         let left_expr = prefix();
+        //         return left_expr;
+        //     }
+        //     None => {
+        //         todo!("WHAT THE FUCK!")
+        //     }
+        // }
     }
+
+    fn register_prefix(&mut self, t: TokenType, prefix_parse_fn: PrefixParseFn) {
+        self.prefix_parse_fns.insert(t, prefix_parse_fn);
+    }
+
+    fn register_infix(&mut self, t: TokenType, infix_parse_fn: InfixParseFn) {
+        self.infix_parse_fns.insert(t, infix_parse_fn);
+    }
+
+    // fn populate_prefix() -> HashMap<TokenType, PrefixParseFn>{
+    //     let mut hm: HashMap<TokenType, PrefixParseFn>  = HashMap::new();
+    //     hm.insert(TokenType::Int(_), v);
+
+    //     return hm;
+    // }
 }
 
 #[cfg(test)]
 mod test {
+    use crate::{
+        ast::{
+            statements::{let_statement::LetStatement, return_statement},
+            tree::Node,
+        },
+        lexer::token::TokenType,
+    };
+
     use super::Parser;
 
     #[test]
-    fn test() {
+    fn parse_let_statement() {
         let input = "
         let x = 5;
-        let y = 10;
-        let foobar = 838383;
+        let y = 100;
         ";
-        let mut p = Parser::new(input);
+        let let_name = ["x", "y"];
+        let let_val = ["5", "100"];
+        let p = Parser::new(input);
 
-        p.parse_program();
+        let result = Parser::run_parser(p);
 
-        // assert_eq!(1, 2)
+        for (i, curr) in result.iter().enumerate() {
+            let l = curr.as_any().downcast_ref::<LetStatement>().unwrap();
+            assert_eq!(l.token.kind, TokenType::LET);
+            assert_eq!(l.name.token_literal(), let_name.get(i).unwrap().to_string());
+            assert_eq!(l.value.token_literal(), let_val.get(i).unwrap().to_string());
+        }
     }
 }
