@@ -1,8 +1,8 @@
 use crate::{lexer::token::Token, ast::tree::{Expression, Statement, Node}};
 
 pub struct ReturnStatement {
-    token: Token,
-    value: Box<dyn Expression>
+    pub token: Token,
+    pub value: Box<dyn Expression>
 }
 
 impl ReturnStatement {

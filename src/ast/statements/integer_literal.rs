@@ -9,8 +9,8 @@ pub struct IntegerLiteral {
 }
 
 impl IntegerLiteral {
-    pub fn new(token: Token, value: i64) -> Self {
-        Self { token, value }
+    pub fn new(token: &Token, value: i64) -> Self {
+        Self { token: token.clone(), value }
     }
 }
 
