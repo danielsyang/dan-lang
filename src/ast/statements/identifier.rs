@@ -9,6 +9,15 @@ pub struct Identifier {
     value: String,
 }
 
+impl Identifier {
+    pub fn new(token: &Token) -> Self {
+        Self {
+            token: token.clone(),
+            value: token.literal.clone(),
+        }
+    }
+}
+
 impl Node for Identifier {
     fn token_literal(&self) -> String {
         return self.token.literal.clone();
@@ -20,13 +29,4 @@ impl Node for Identifier {
 
 impl Expression for Identifier {
     fn expression_node(&self) {}
-}
-
-impl Identifier {
-    pub fn new(token: &Token) -> Self {
-        Self {
-            token: token.clone(),
-            value: token.literal.clone(),
-        }
-    }
 }

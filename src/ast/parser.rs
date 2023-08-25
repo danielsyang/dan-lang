@@ -95,6 +95,8 @@ impl Parser {
             .get(self.current_position + 1)
             .expect("invalid state, I don't know what to do!");
 
+        println!("next: {:?}, desire {:?}", next_token.kind, desire_token_type);
+
         if next_token.kind == desire_token_type {
             return true;
         }
@@ -139,21 +141,40 @@ impl Parser {
         return st;
     }
 
-    fn parse_return_statement(&self, curr: Token) -> ReturnStatement {
+    fn parse_return_statement(&mut self, mut curr: Token) -> ReturnStatement {
         let return_token = curr.clone();
+        curr = self.consume_token();
 
-        // if self.expect_next_token() {
-        //     self.set_next_token_error()
-        // }
+        println!("jeeeez: {:?}", curr);
+        
         let val = self.parse_expression(Precedence::Int, curr);
-
         let rt = ReturnStatement::new(return_token, val);
+
+        println!(" I CAN'T UNDERSTAND WHAT'S GOING ON");
+        if self.expect_next_token(TokenType::Semicolon) {
+            println!("ejeeeeezzz222: ");
+            self.consume_token();
+        }
 
         return rt;
     }
 
-    fn parse_expression_statement(&self, curr: Token) -> ExpressionStatement {
-        todo!("parse expression statement")
+    fn parse_expression_statement(&mut self, mut curr: Token) -> ExpressionStatement {
+        let exp_current = curr.clone();
+        curr = self.consume_token();
+
+        if !self.expect_next_token(TokenType::Semicolon) {
+            self.set_next_token_error(TokenType::Semicolon);
+        }
+
+        let exp = self.parse_expression(Precedence::Lowest, curr);
+        let exp_sttm = ExpressionStatement::new(exp_current, exp);
+
+        self.consume_token();
+        curr = self.consume_token();
+        println!("I don't understand: {:?}", curr);
+
+        return exp_sttm;
     }
 
     pub fn parse_program(&mut self) -> Box<dyn Statement> {
@@ -176,8 +197,11 @@ impl Parser {
     }
 
     fn parse_expression(&self, p: Precedence, curr: Token) -> Box<dyn Expression> {
+        println!("curr {:?}", curr.kind);
         match curr.kind {
-            TokenType::Int(v) => return Box::new(IntegerLiteral::new(curr, v)),
+            TokenType::Int(v) => Box::new(IntegerLiteral::new(curr, v)),
+            TokenType::Identifier => Box::new(Identifier::new(&curr)),
+            // TokenType::Return => Box::new(x),
             _ => panic!("not yet implemented"),
         }
         // let val = self.prefix_parse_fns.get(&curr.kind);
@@ -225,9 +249,10 @@ mod test {
         let input = "
         let x = 5;
         let y = 100;
+        let foobar = y;
         ";
-        let let_name = ["x", "y"];
-        let let_val = ["5", "100"];
+        let let_name = ["x", "y", "foobar"];
+        let let_val = ["5", "100", "y"];
         let p = Parser::new(input);
 
         let result = Parser::run_parser(p);
@@ -238,5 +263,17 @@ mod test {
             assert_eq!(l.name.token_literal(), let_name.get(i).unwrap().to_string());
             assert_eq!(l.value.token_literal(), let_val.get(i).unwrap().to_string());
         }
+    }
+
+    #[test]
+    fn parse_return_statement() {
+        let input = "
+        return 5;
+        return 100;
+        return foobar;
+        ";
+        let p = Parser::new(input);
+        println!("tokens: {:?}", p.tokens);
+        let result = Parser::run_parser(p);
     }
 }
