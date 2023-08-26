@@ -1,4 +1,6 @@
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
+
+use lazy_static::lazy_static;
 
 use crate::lexer::{
     lexer::Lexer,
@@ -6,13 +8,16 @@ use crate::lexer::{
 };
 
 use super::{
+    expression_statement::ExpressionStatement,
     identifier::Identifier,
     integer_literal::IntegerLiteral,
     let_statement::LetStatement,
+    prefix_expression::PrefixExpression,
     return_statement::ReturnStatement,
     tree::{Expression, Statement},
 };
 
+#[derive(Clone, Copy, Debug)]
 enum Precedence {
     Int = 0,
     Lowest = 1,
@@ -22,6 +27,22 @@ enum Precedence {
     Product = 5,
     Prefix = 6,
     Call = 7,
+}
+
+lazy_static! {
+    static ref PRECEDENCES: HashMap<TokenType, u8> = {
+        let mut map = HashMap::new();
+        map.insert(TokenType::Eq, Precedence::Equals as u8);
+        map.insert(TokenType::NotEq, Precedence::Equals as u8);
+        map.insert(TokenType::LT, Precedence::LessGreater as u8);
+        map.insert(TokenType::GT, Precedence::LessGreater as u8);
+        map.insert(TokenType::PlusSign, Precedence::Sum as u8);
+        map.insert(TokenType::MinusSign, Precedence::Sum as u8);
+        map.insert(TokenType::SlashSign, Precedence::Product as u8);
+        map.insert(TokenType::MultiplicationSign, Precedence::Product as u8);
+        map.insert(TokenType::LeftParen, Precedence::Call as u8);
+        map
+    };
 }
 
 pub struct Parser {
@@ -77,7 +98,7 @@ impl Parser {
         match self.current_token.kind {
             TokenType::LET => Box::new(self.parse_let_statement()),
             TokenType::Return => Box::new(self.parse_return_statement()),
-            _ => panic!("not yet implemented, got {:?}", self.current_token.kind),
+            _ => Box::new(self.parse_expression_statement())
         }
     }
 
@@ -110,7 +131,7 @@ impl Parser {
 
         self.consume_token();
 
-        let val = self.parse_expression();
+        let val = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_next_token(TokenType::Semicolon) {
             panic!(
@@ -127,7 +148,7 @@ impl Parser {
 
         self.consume_token();
 
-        let val = self.parse_expression();
+        let val = self.parse_expression(Precedence::Lowest);
 
         if self.next_token.kind == TokenType::Semicolon {
             self.consume_token();
@@ -136,12 +157,57 @@ impl Parser {
         return ReturnStatement::new(return_token, val);
     }
 
-    fn parse_expression(&self) -> Box<dyn Expression> {
-        match self.current_token.kind {
+    fn parse_expression_statement(&mut self) -> ExpressionStatement {
+        let curr = self.current_token.clone();
+        let exp = self.parse_expression(Precedence::Lowest);
+        let stmt = ExpressionStatement::new(curr, exp);
+
+        if self.next_token.kind == TokenType::Semicolon {
+            self.consume_token();
+        }
+
+        return stmt;
+    }
+
+    fn parse_prefix_expression(&mut self) -> Box<dyn Expression> {
+        let current_prefix_expression = self.current_token.clone();
+
+        self.consume_token();
+
+        let expr = self.parse_expression(Precedence::Prefix);
+
+        let pe = PrefixExpression::new(&current_prefix_expression, expr);
+
+        return Box::new(pe);
+    }
+
+    fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
+        let left_exp: Box<dyn Expression> = match self.current_token.kind {
             TokenType::Int(v) => Box::new(IntegerLiteral::new(&self.current_token, v)),
             TokenType::Identifier => Box::new(Identifier::new(&self.current_token)),
-            _ => panic!("not yet implemented, got {:?}", self.current_token.kind),
+            TokenType::BangSign => self.parse_prefix_expression(),
+            TokenType::MinusSign => self.parse_prefix_expression(),
+            _ => panic!(
+                "parse_expression: not yet implemented, got {:?}",
+                self.current_token.kind
+            ),
+        };
+
+        loop {
+            if (p as u8) >= self.next_precedence().clone()
+                || self.next_token.kind == TokenType::Semicolon
+            {
+                break;
+            }
+            // get infix
         }
+        return left_exp;
+    }
+
+    fn next_precedence(&self) -> &u8 {
+        PRECEDENCES
+            .get(&self.next_token.kind)
+            .unwrap_or(&(Precedence::Lowest as u8))
     }
 }
 
@@ -212,6 +278,31 @@ mod test {
             let l = curr.as_any().downcast_ref::<ReturnStatement>().unwrap();
             assert_eq!(l.token.kind, TokenType::Return);
             assert_eq!(l.value.token_literal(), let_val.get(i).unwrap().to_string());
+        }
+    }
+
+    // #[test]
+    fn parse_prefix_expression() {
+        let input = "
+        !5;
+        -15;
+        !foobar;
+        -foobar;
+        !true;
+        !false;
+        ";
+
+        let mut p = Parser::new(input);
+        let let_val = ["5", "100", "foobar"];
+        let mut result: Vec<Box<dyn Statement>> = vec![];
+        loop {
+            let parsed = p.parse_program();
+            result.push(parsed);
+
+            if p.next_token.kind == TokenType::EOF {
+                break;
+            }
+            p.consume_token();
         }
     }
 }
