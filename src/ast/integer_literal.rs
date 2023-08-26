@@ -1,5 +1,5 @@
 use crate::{
-    ast::tree::{Expression, Node, Statement},
+    ast::tree::{Expression, Node},
     lexer::token::Token,
 };
 
@@ -10,7 +10,10 @@ pub struct IntegerLiteral {
 
 impl IntegerLiteral {
     pub fn new(token: &Token, value: i64) -> Self {
-        Self { token: token.clone(), value }
+        Self {
+            token: token.clone(),
+            value,
+        }
     }
 }
 

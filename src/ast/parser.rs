@@ -1,18 +1,16 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
-use crate::{
-    ast::statements::{
-        identifier::Identifier, integer_literal::IntegerLiteral, return_statement::ReturnStatement,
-    },
-    lexer::{
-        lexer::Lexer,
-        token::{Token, TokenType},
-    },
+use crate::lexer::{
+    lexer::Lexer,
+    token::{Token, TokenType},
 };
 
 use super::{
-    statements::{expression_statement::ExpressionStatement, let_statement::LetStatement},
-    tree::{Expression, InfixParseFn, PrefixParseFn, Statement},
+    identifier::Identifier,
+    integer_literal::IntegerLiteral,
+    let_statement::LetStatement,
+    return_statement::ReturnStatement,
+    tree::{Expression, Statement},
 };
 
 enum Precedence {
@@ -59,7 +57,7 @@ impl Parser {
         };
     }
 
-    fn consume_token(&mut self) {
+    pub fn consume_token(&mut self) {
         println!(
             "moved current_token {:?} to {:?}",
             self.current_token.kind, self.next_token.kind
@@ -75,7 +73,7 @@ impl Parser {
         );
     }
 
-    fn parse_program(&mut self) -> Box<dyn Statement> {
+    pub fn parse_program(&mut self) -> Box<dyn Statement> {
         match self.current_token.kind {
             TokenType::LET => Box::new(self.parse_let_statement()),
             TokenType::Return => Box::new(self.parse_return_statement()),
@@ -151,7 +149,8 @@ impl Parser {
 mod test {
     use crate::{
         ast::{
-            statements::{let_statement::LetStatement, return_statement::{self, ReturnStatement}},
+            let_statement::LetStatement,
+            return_statement::ReturnStatement,
             tree::{Node, Statement},
         },
         lexer::token::TokenType,

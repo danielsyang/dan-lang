@@ -26,6 +26,3 @@ impl<T: 'static> AToAny for T {
         self
     }
 }
-
-pub type PrefixParseFn = fn() -> Box<dyn Expression>;
-pub type InfixParseFn = fn(e: Box<dyn Expression>) -> Box<dyn Expression>;

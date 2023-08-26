@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use crate::{
     ast::tree::{Expression, Node, Statement},
     lexer::token::Token,

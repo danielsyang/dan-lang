@@ -1,8 +1,7 @@
 use ast::parser::Parser;
-use lexer::{
-    lexer::Lexer,
-    token::{Token, TokenType},
-};
+use lexer::token::TokenType;
+
+use crate::ast::tree::Statement;
 
 mod ast;
 mod lexer;
@@ -16,4 +15,14 @@ fn main() {
 
     let mut p = Parser::new(input);
     println!("{:?}", p.tokens);
+    let mut result: Vec<Box<dyn Statement>> = vec![];
+    loop {
+        let parsed = p.parse_program();
+        result.push(parsed);
+
+        if p.next_token.kind == TokenType::EOF {
+            break;
+        }
+        p.consume_token();
+    }
 }
