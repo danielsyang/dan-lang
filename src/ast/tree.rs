@@ -1,4 +1,4 @@
-use std::any::Any;
+use std::{any::Any, fmt::Debug};
 
 pub trait Node: AToAny {
     fn token_literal(&self) -> String;
@@ -7,6 +7,12 @@ pub trait Node: AToAny {
 
 pub trait Statement: Node {
     fn statement_node(&self);
+}
+
+impl Debug for dyn Node {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.token_literal())
+    }
 }
 
 pub trait Expression: Node {

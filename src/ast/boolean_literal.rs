@@ -3,13 +3,13 @@ use crate::{
     lexer::token::Token,
 };
 
-pub struct IntegerLiteral {
+pub struct BooleanLiteral {
     token: Token,
-    value: i64,
+    value: bool,
 }
 
-impl IntegerLiteral {
-    pub fn new(token: &Token, value: i64) -> Self {
+impl BooleanLiteral {
+    pub fn new(token: &Token, value: bool) -> Self {
         Self {
             token: token.clone(),
             value,
@@ -17,11 +17,11 @@ impl IntegerLiteral {
     }
 }
 
-impl Expression for IntegerLiteral {
+impl Expression for BooleanLiteral {
     fn expression_node(&self) {}
 }
 
-impl Node for IntegerLiteral {
+impl Node for BooleanLiteral {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }

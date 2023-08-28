@@ -8,6 +8,7 @@ use crate::lexer::{
 };
 
 use super::{
+    boolean_literal::BooleanLiteral,
     expression_statement::ExpressionStatement,
     identifier::Identifier,
     integer_literal::IntegerLiteral,
@@ -181,10 +182,16 @@ impl Parser {
         Box::new(pe)
     }
 
+    fn parse_infix_expression(&mut self) -> Box<dyn Expression> {
+        todo!("Todo infix expression")
+    }
+
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
         let left_exp: Box<dyn Expression> = match self.current_token.kind {
             TokenType::Int(v) => Box::new(IntegerLiteral::new(&self.current_token, v)),
             TokenType::Identifier => Box::new(Identifier::new(&self.current_token)),
+            TokenType::True => Box::new(BooleanLiteral::new(&self.current_token, true)),
+            TokenType::False => Box::new(BooleanLiteral::new(&self.current_token, false)),
             TokenType::BangSign => self.parse_prefix_expression(),
             TokenType::MinusSign => self.parse_prefix_expression(),
             _ => panic!(
@@ -198,7 +205,11 @@ impl Parser {
             {
                 break;
             }
+
             // get infix
+            match self.next_token.kind {
+                _ => {}
+            }
         }
         left_exp
     }
@@ -214,7 +225,9 @@ impl Parser {
 mod test {
     use crate::{
         ast::{
+            expression_statement::ExpressionStatement,
             let_statement::LetStatement,
+            prefix_expression::PrefixExpression,
             return_statement::ReturnStatement,
             tree::{Node, Statement},
         },
@@ -280,7 +293,7 @@ mod test {
         }
     }
 
-    // #[test]
+    #[test]
     fn parse_prefix_expression() {
         let input = "
         !5;
@@ -292,7 +305,14 @@ mod test {
         ";
 
         let mut p = Parser::new(input);
-        let let_val = ["5", "100", "foobar"];
+        let expression_stmt = [
+            "(! 5;)",
+            "(- 15;)",
+            "(! foobar;)",
+            "(- foobar;)",
+            "(! true;)",
+            "(! false;)",
+        ];
         let mut result: Vec<Box<dyn Statement>> = vec![];
         loop {
             let parsed = p.parse_program();
@@ -302,6 +322,14 @@ mod test {
                 break;
             }
             p.consume_token();
+        }
+
+        for (i, curr) in result.iter().enumerate() {
+            let l = curr.as_any().downcast_ref::<ExpressionStatement>().unwrap();
+            assert_eq!(
+                l.expression.string(),
+                expression_stmt.get(i).unwrap().to_string()
+            );
         }
     }
 }

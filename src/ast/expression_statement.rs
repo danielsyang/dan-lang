@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::{
     ast::tree::{Expression, Node, Statement},
     lexer::token::Token,
@@ -24,5 +26,11 @@ impl Node for ExpressionStatement {
 
     fn string(&self) -> String {
         self.expression.token_literal()
+    }
+}
+
+impl Debug for ExpressionStatement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.token_literal())
     }
 }

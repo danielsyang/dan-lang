@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use crate::lexer::token::Token;
 
 use super::tree::{Expression, Node};
@@ -20,7 +22,7 @@ impl PrefixExpression {
 
 impl Node for PrefixExpression {
     fn string(&self) -> String {
-        format!("({} {} )", self.operator, self.right.string())
+        format!("({} {})", self.operator, self.right.string())
     }
 
     fn token_literal(&self) -> String {
@@ -30,4 +32,10 @@ impl Node for PrefixExpression {
 
 impl Expression for PrefixExpression {
     fn expression_node(&self) {}
+}
+
+impl Debug for PrefixExpression {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.token_literal())
+    }
 }

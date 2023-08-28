@@ -23,7 +23,7 @@ impl Node for Identifier {
         self.token.literal.clone()
     }
     fn string(&self) -> String {
-        self.value.clone()
+        format!("{};", self.value)
     }
 }
 
