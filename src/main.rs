@@ -20,7 +20,7 @@ fn main() {
         let parsed = p.parse_program();
         result.push(parsed);
 
-        if p.next_token.kind == TokenType::EOF {
+        if p.next_token.kind == TokenType::Eof {
             break;
         }
         p.consume_token();

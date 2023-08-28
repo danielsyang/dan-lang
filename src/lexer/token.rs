@@ -3,7 +3,7 @@ pub enum TokenType {
     Comma,
     Semicolon,
     // Illegal,
-    EOF,
+    Eof,
     Identifier,
     Int(i64),
     LeftParen,
@@ -12,7 +12,7 @@ pub enum TokenType {
     RightBrace,
 
     // keywords
-    LET,
+    Let,
     Function,
     True,
     False,
@@ -50,14 +50,14 @@ impl Token {
 
     pub fn new_let() -> Self {
         Self {
-            kind: TokenType::LET,
+            kind: TokenType::Let,
             literal: "let".to_string(),
         }
     }
 
     pub fn eof() -> Self {
         Self {
-            kind: TokenType::EOF,
+            kind: TokenType::Eof,
             literal: "\0".to_string(),
         }
     }

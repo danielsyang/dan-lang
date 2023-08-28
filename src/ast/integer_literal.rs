@@ -23,10 +23,10 @@ impl Expression for IntegerLiteral {
 
 impl Node for IntegerLiteral {
     fn token_literal(&self) -> String {
-        return self.token.literal.clone();
+        self.token.literal.clone()
     }
 
     fn string(&self) -> String {
-        format!("{} {};", self.token_literal(), self.value.to_string())
+        format!("{} {};", self.token_literal(), self.value)
     }
 }

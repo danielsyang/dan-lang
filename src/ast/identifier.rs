@@ -20,7 +20,7 @@ impl Identifier {
 
 impl Node for Identifier {
     fn token_literal(&self) -> String {
-        return self.token.literal.clone();
+        self.token.literal.clone()
     }
     fn string(&self) -> String {
         self.value.clone()

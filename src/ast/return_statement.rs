@@ -1,8 +1,11 @@
-use crate::{lexer::token::Token, ast::tree::{Expression, Statement, Node}};
+use crate::{
+    ast::tree::{Expression, Node, Statement},
+    lexer::token::Token,
+};
 
 pub struct ReturnStatement {
     pub token: Token,
-    pub value: Box<dyn Expression>
+    pub value: Box<dyn Expression>,
 }
 
 impl ReturnStatement {
@@ -17,10 +20,10 @@ impl Statement for ReturnStatement {
 
 impl Node for ReturnStatement {
     fn token_literal(&self) -> String {
-        return self.token.literal.clone();
+        self.token.literal.clone()
     }
 
     fn string(&self) -> String {
-       format!("{} {};", self.token_literal(), self.value.token_literal())
+        format!("{} {};", self.token_literal(), self.value.token_literal())
     }
 }

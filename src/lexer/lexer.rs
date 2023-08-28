@@ -44,7 +44,7 @@ impl Lexer {
             }
         }
 
-        if curr.is_digit(10) {
+        if curr.is_ascii_digit() {
             let number = self.consume_number(curr);
             return Some(Token::int(number));
         }
@@ -54,28 +54,22 @@ impl Lexer {
                 let next = self.peek();
 
                 match next {
-                    Some(d) => match d {
-                        '=' => {
-                            self.consume_char();
-                            Some(Token::new(TokenType::Eq, "==".to_string()))
-                        }
-                        _ => Some(Token::assign_sign()),
-                    },
-                    None => Some(Token::assign_sign()),
+                    Some('=') => {
+                        self.consume_char();
+                        Some(Token::new(TokenType::Eq, "==".to_string()))
+                    }
+                    _ => Some(Token::assign_sign()),
                 }
             }
             '!' => {
                 let next = self.peek();
 
                 match next {
-                    Some(c) => match c {
-                        '=' => {
-                            self.consume_char();
-                            Some(Token::new(TokenType::NotEq, "!=".to_string()))
-                        }
-                        _ => Some(Token::bang()),
-                    },
-                    None => Some(Token::bang()),
+                    Some('=') => {
+                        self.consume_char();
+                        Some(Token::new(TokenType::NotEq, "!=".to_string()))
+                    }
+                    _ => Some(Token::bang()),
                 }
             }
 
@@ -104,7 +98,7 @@ impl Lexer {
 
         self.position += 1;
 
-        return c;
+        c
     }
 
     fn peek(&self) -> Option<char> {
@@ -131,7 +125,7 @@ impl Lexer {
             initial_char = self.consume_char();
         }
 
-        return word;
+        word
     }
 
     fn consume_number(&mut self, mut initial_char: char) -> i64 {
@@ -144,7 +138,7 @@ impl Lexer {
 
             match self.peek() {
                 Some(v) => {
-                    if !v.is_digit(10) {
+                    if !v.is_ascii_digit() {
                         break;
                     }
                 }
@@ -156,7 +150,7 @@ impl Lexer {
             initial_char = self.consume_char();
         }
 
-        return number;
+        number
     }
 
     fn skip_whitespace_or_new_line(c: char) -> bool {
@@ -164,7 +158,7 @@ impl Lexer {
             return true;
         };
 
-        return false;
+        false
     }
 }
 

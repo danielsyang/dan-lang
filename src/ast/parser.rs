@@ -70,12 +70,12 @@ impl Parser {
             .clone();
         let next_token = tokens.pop_front().expect("Expected at least EOF.").clone();
 
-        return Self {
+        Self {
             tokens,
             errors: vec![],
             current_token,
             next_token,
-        };
+        }
     }
 
     pub fn consume_token(&mut self) {
@@ -96,9 +96,9 @@ impl Parser {
 
     pub fn parse_program(&mut self) -> Box<dyn Statement> {
         match self.current_token.kind {
-            TokenType::LET => Box::new(self.parse_let_statement()),
+            TokenType::Let => Box::new(self.parse_let_statement()),
             TokenType::Return => Box::new(self.parse_return_statement()),
-            _ => Box::new(self.parse_expression_statement())
+            _ => Box::new(self.parse_expression_statement()),
         }
     }
 
@@ -107,7 +107,7 @@ impl Parser {
             self.consume_token();
             return true;
         }
-        return false;
+        false
     }
 
     fn parse_let_statement(&mut self) -> LetStatement {
@@ -140,7 +140,7 @@ impl Parser {
             )
         }
 
-        return LetStatement::new(let_token, identifier, val);
+        LetStatement::new(let_token, identifier, val)
     }
 
     fn parse_return_statement(&mut self) -> ReturnStatement {
@@ -154,7 +154,7 @@ impl Parser {
             self.consume_token();
         }
 
-        return ReturnStatement::new(return_token, val);
+        ReturnStatement::new(return_token, val)
     }
 
     fn parse_expression_statement(&mut self) -> ExpressionStatement {
@@ -166,7 +166,7 @@ impl Parser {
             self.consume_token();
         }
 
-        return stmt;
+        stmt
     }
 
     fn parse_prefix_expression(&mut self) -> Box<dyn Expression> {
@@ -178,7 +178,7 @@ impl Parser {
 
         let pe = PrefixExpression::new(&current_prefix_expression, expr);
 
-        return Box::new(pe);
+        Box::new(pe)
     }
 
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
@@ -194,14 +194,13 @@ impl Parser {
         };
 
         loop {
-            if (p as u8) >= self.next_precedence().clone()
-                || self.next_token.kind == TokenType::Semicolon
+            if (p as u8) >= *self.next_precedence() || self.next_token.kind == TokenType::Semicolon
             {
                 break;
             }
             // get infix
         }
-        return left_exp;
+        left_exp
     }
 
     fn next_precedence(&self) -> &u8 {
@@ -240,7 +239,7 @@ mod test {
             let parsed = p.parse_program();
             result.push(parsed);
 
-            if p.next_token.kind == TokenType::EOF {
+            if p.next_token.kind == TokenType::Eof {
                 break;
             }
             p.consume_token();
@@ -248,7 +247,7 @@ mod test {
 
         for (i, curr) in result.iter().enumerate() {
             let l = curr.as_any().downcast_ref::<LetStatement>().unwrap();
-            assert_eq!(l.token.kind, TokenType::LET);
+            assert_eq!(l.token.kind, TokenType::Let);
             assert_eq!(l.name.token_literal(), let_name.get(i).unwrap().to_string());
             assert_eq!(l.value.token_literal(), let_val.get(i).unwrap().to_string());
         }
@@ -268,7 +267,7 @@ mod test {
             let parsed = p.parse_program();
             result.push(parsed);
 
-            if p.next_token.kind == TokenType::EOF {
+            if p.next_token.kind == TokenType::Eof {
                 break;
             }
             p.consume_token();
@@ -299,7 +298,7 @@ mod test {
             let parsed = p.parse_program();
             result.push(parsed);
 
-            if p.next_token.kind == TokenType::EOF {
+            if p.next_token.kind == TokenType::Eof {
                 break;
             }
             p.consume_token();
