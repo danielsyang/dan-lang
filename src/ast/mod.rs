@@ -1,6 +1,7 @@
 pub mod boolean_literal;
 pub mod expression_statement;
 pub mod identifier;
+pub mod infix_expression;
 pub mod integer_literal;
 pub mod let_statement;
 pub mod parser;

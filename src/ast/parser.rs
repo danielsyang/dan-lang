@@ -1,10 +1,11 @@
 use std::collections::{HashMap, VecDeque};
 
-use lazy_static::lazy_static;
-
-use crate::lexer::{
-    lexer::Lexer,
-    token::{Token, TokenType},
+use crate::{
+    ast::infix_expression::InfixExpression,
+    lexer::{
+        lexer::Lexer,
+        token::{Token, TokenType},
+    },
 };
 
 use super::{
@@ -28,22 +29,6 @@ enum Precedence {
     Product = 5,
     Prefix = 6,
     Call = 7,
-}
-
-lazy_static! {
-    static ref PRECEDENCES: HashMap<TokenType, u8> = {
-        let mut map = HashMap::new();
-        map.insert(TokenType::Eq, Precedence::Equals as u8);
-        map.insert(TokenType::NotEq, Precedence::Equals as u8);
-        map.insert(TokenType::LT, Precedence::LessGreater as u8);
-        map.insert(TokenType::GT, Precedence::LessGreater as u8);
-        map.insert(TokenType::PlusSign, Precedence::Sum as u8);
-        map.insert(TokenType::MinusSign, Precedence::Sum as u8);
-        map.insert(TokenType::SlashSign, Precedence::Product as u8);
-        map.insert(TokenType::MultiplicationSign, Precedence::Product as u8);
-        map.insert(TokenType::LeftParen, Precedence::Call as u8);
-        map
-    };
 }
 
 pub struct Parser {
@@ -182,9 +167,15 @@ impl Parser {
         Box::new(pe)
     }
 
-    fn parse_infix_expression(&mut self) -> Box<dyn Expression> {
-        todo!("Todo infix expression")
-    }
+    fn parse_infix_expression(&mut self, left: Box<dyn Expression>) -> Box<dyn Expression> {
+        let curr = self.current_token.clone();
+        let precedence = self.current_precedence();
+        self.consume_token();
+
+        let right_expression = self.parse_expression(precedence);
+
+       Box::new(InfixExpression::new(&curr, left, right_expression))
+    } 
 
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
         let left_exp: Box<dyn Expression> = match self.current_token.kind {
@@ -201,23 +192,49 @@ impl Parser {
         };
 
         loop {
-            if (p as u8) >= *self.next_precedence() || self.next_token.kind == TokenType::Semicolon
-            {
+            if (p as u8) >= self.next_precedence() || self.next_token.kind == TokenType::Semicolon {
                 break;
             }
 
             // get infix
-            match self.next_token.kind {
-                _ => {}
-            }
+            let infix = match self.next_token.kind {
+                TokenType::PlusSign => self.parse_infix_expression(left_exp),
+                _ => {
+                    break;
+                }
+            };
         }
         left_exp
     }
 
-    fn next_precedence(&self) -> &u8 {
-        PRECEDENCES
-            .get(&self.next_token.kind)
-            .unwrap_or(&(Precedence::Lowest as u8))
+    fn current_precedence(&self) -> Precedence {
+        match self.current_token.kind {
+            TokenType::Eq => Precedence::Equals,
+            TokenType::NotEq => Precedence::Equals,
+            TokenType::LT => Precedence::LessGreater,
+            TokenType::GT => Precedence::LessGreater,
+            TokenType::PlusSign => Precedence::Sum,
+            TokenType::MinusSign => Precedence::Sum,
+            TokenType::SlashSign => Precedence::Product,
+            TokenType::MultiplicationSign => Precedence::Product,
+            TokenType::LeftParen => Precedence::Call,
+            _ => Precedence::Lowest,
+        }
+    }
+
+    fn next_precedence(&self) -> u8 {
+        match self.next_token.kind {
+            TokenType::Eq => Precedence::Equals as u8,
+            TokenType::NotEq => Precedence::Equals as u8,
+            TokenType::LT => Precedence::LessGreater as u8,
+            TokenType::GT => Precedence::LessGreater as u8,
+            TokenType::PlusSign => Precedence::Sum as u8,
+            TokenType::MinusSign => Precedence::Sum as u8,
+            TokenType::SlashSign => Precedence::Product as u8,
+            TokenType::MultiplicationSign => Precedence::Product as u8,
+            TokenType::LeftParen => Precedence::Call as u8,
+            _ => Precedence::Lowest as u8,
+        }
     }
 }
 
@@ -227,7 +244,6 @@ mod test {
         ast::{
             expression_statement::ExpressionStatement,
             let_statement::LetStatement,
-            prefix_expression::PrefixExpression,
             return_statement::ReturnStatement,
             tree::{Node, Statement},
         },
@@ -302,6 +318,48 @@ mod test {
         -foobar;
         !true;
         !false;
+        ";
+
+        let mut p = Parser::new(input);
+        let expression_stmt = [
+            "(! 5;)",
+            "(- 15;)",
+            "(! foobar;)",
+            "(- foobar;)",
+            "(! true;)",
+            "(! false;)",
+        ];
+        let mut result: Vec<Box<dyn Statement>> = vec![];
+        loop {
+            let parsed = p.parse_program();
+            result.push(parsed);
+
+            if p.next_token.kind == TokenType::Eof {
+                break;
+            }
+            p.consume_token();
+        }
+
+        for (i, curr) in result.iter().enumerate() {
+            let l = curr.as_any().downcast_ref::<ExpressionStatement>().unwrap();
+            assert_eq!(
+                l.expression.string(),
+                expression_stmt.get(i).unwrap().to_string()
+            );
+        }
+    }
+
+    #[test]
+    fn parse_infix_expression() {
+        let input = "
+        5 + 5;
+        5 - 5;
+        5 * 5;
+        5 / 5;
+        5 > 5;
+        5 < 5;
+        5 == 5
+        5 != 5
         ";
 
         let mut p = Parser::new(input);
