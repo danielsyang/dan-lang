@@ -1,21 +1,13 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::VecDeque;
 
-use crate::{
-    ast::infix_expression::InfixExpression,
-    lexer::{
-        lexer::Lexer,
-        token::{Token, TokenType},
-    },
+use crate::lexer::{
+    lexer::Lexer,
+    token::{Token, TokenType},
 };
 
 use super::{
-    boolean_literal::BooleanLiteral,
-    expression_statement::ExpressionStatement,
-    identifier::Identifier,
-    integer_literal::IntegerLiteral,
-    let_statement::LetStatement,
-    prefix_expression::PrefixExpression,
-    return_statement::ReturnStatement,
+    expression::{BooleanLiteral, Identifier, InfixExpression, IntegerLiteral, PrefixExpression},
+    statement::{ExpressionStatement, LetStatement, ReturnStatement},
     tree::{Expression, Statement},
 };
 
@@ -174,8 +166,8 @@ impl Parser {
 
         let right_expression = self.parse_expression(precedence);
 
-       Box::new(InfixExpression::new(&curr, left, right_expression))
-    } 
+        Box::new(InfixExpression::new(&curr, left, right_expression))
+    }
 
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
         let left_exp: Box<dyn Expression> = match self.current_token.kind {
@@ -198,7 +190,7 @@ impl Parser {
 
             // get infix
             let infix = match self.next_token.kind {
-                TokenType::PlusSign => self.parse_infix_expression(left_exp),
+                // TokenType::PlusSign => self.parse_infix_expression(left_exp),
                 _ => {
                     break;
                 }
@@ -242,9 +234,7 @@ impl Parser {
 mod test {
     use crate::{
         ast::{
-            expression_statement::ExpressionStatement,
-            let_statement::LetStatement,
-            return_statement::ReturnStatement,
+            statement::{ExpressionStatement, LetStatement, ReturnStatement},
             tree::{Node, Statement},
         },
         lexer::token::TokenType,

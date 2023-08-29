@@ -1,10 +1,4 @@
-pub mod boolean_literal;
-pub mod expression_statement;
-pub mod identifier;
-pub mod infix_expression;
-pub mod integer_literal;
-pub mod let_statement;
+pub mod expression;
 pub mod parser;
-pub mod prefix_expression;
-pub mod return_statement;
+pub mod statement;
 pub mod tree;
