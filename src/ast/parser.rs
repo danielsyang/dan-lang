@@ -389,6 +389,7 @@ mod test {
         bar * bar;
         true == true;
         false != true;
+        5 + 5 * 5;
         ";
 
         let mut p = Parser::new(input);
@@ -406,6 +407,7 @@ mod test {
             "(bar * bar)",
             "(true == true)",
             "(false != true)",
+            "(5 + (5 * 5))"
         ];
         let mut result: Vec<Box<dyn Statement>> = vec![];
         loop {
