@@ -84,7 +84,8 @@ impl Node for ExpressionStatement {
     }
 
     fn string(&self) -> String {
-        self.expression.token_literal()
+        format!("{:?}", self.expression)
+        // self.expression.token_literal()
     }
 }
 

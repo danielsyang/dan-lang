@@ -161,6 +161,7 @@ impl Parser {
 
     fn parse_infix_expression(&mut self, left: Box<dyn Expression>) -> Box<dyn Expression> {
         let curr = self.current_token.clone();
+
         let precedence = self.current_precedence();
         self.consume_token();
 
@@ -183,19 +184,51 @@ impl Parser {
             ),
         };
 
-        loop {
-            if (p as u8) >= self.next_precedence() || self.next_token.kind == TokenType::Semicolon {
-                break;
-            }
-
-            // get infix
+        // the original book recommended a for loop, but bc of limitations of my knowledge, I'll tackle this later
+        if (p as u8) < self.next_precedence() && self.next_token.kind != TokenType::Semicolon {
             let infix = match self.next_token.kind {
-                // TokenType::PlusSign => self.parse_infix_expression(left_exp),
-                _ => {
-                    break;
+                TokenType::PlusSign => {
+                    self.consume_token();
+                    self.parse_infix_expression(left_exp)
                 }
+                TokenType::MinusSign => {
+                    self.consume_token();
+                    self.parse_infix_expression(left_exp)
+                }
+                TokenType::MultiplicationSign => {
+                    self.consume_token();
+                    self.parse_infix_expression(left_exp)
+                }
+                TokenType::SlashSign => {
+                    self.consume_token();
+                    self.parse_infix_expression(left_exp)
+                }
+                TokenType::Eq => {
+                    self.consume_token();
+                    self.parse_infix_expression(left_exp)
+                }
+                TokenType::NotEq => {
+                    self.consume_token();
+                    self.parse_infix_expression(left_exp)
+                }
+                TokenType::LT => {
+                    self.consume_token();
+                    self.parse_infix_expression(left_exp)
+                }
+                TokenType::GT => {
+                    self.consume_token();
+                    self.parse_infix_expression(left_exp)
+                }
+                TokenType::LeftParen => {
+                    self.consume_token();
+                    todo!("parse_call_expression not yet implemented")
+                }
+                _ => left_exp,
             };
+
+            return infix;
         }
+
         left_exp
     }
 
@@ -234,6 +267,7 @@ impl Parser {
 mod test {
     use crate::{
         ast::{
+            expression::InfixExpression,
             statement::{ExpressionStatement, LetStatement, ReturnStatement},
             tree::{Node, Statement},
         },
@@ -312,12 +346,12 @@ mod test {
 
         let mut p = Parser::new(input);
         let expression_stmt = [
-            "(! 5;)",
-            "(- 15;)",
-            "(! foobar;)",
-            "(- foobar;)",
-            "(! true;)",
-            "(! false;)",
+            "(! 5)",
+            "(- 15)",
+            "(! foobar)",
+            "(- foobar)",
+            "(! true)",
+            "(! false)",
         ];
         let mut result: Vec<Box<dyn Statement>> = vec![];
         loop {
@@ -348,18 +382,30 @@ mod test {
         5 / 5;
         5 > 5;
         5 < 5;
-        5 == 5
-        5 != 5
+        5 == 5;
+        5 != 5;
+        foobar + foobar;
+        bar - bar;
+        bar * bar;
+        true == true;
+        false != true;
         ";
 
         let mut p = Parser::new(input);
-        let expression_stmt = [
-            "(! 5;)",
-            "(- 15;)",
-            "(! foobar;)",
-            "(- foobar;)",
-            "(! true;)",
-            "(! false;)",
+        let expected = [
+            "(5 + 5)",
+            "(5 - 5)",
+            "(5 * 5)",
+            "(5 / 5)",
+            "(5 > 5)",
+            "(5 < 5)",
+            "(5 == 5)",
+            "(5 != 5)",
+            "(foobar + foobar)",
+            "(bar - bar)",
+            "(bar * bar)",
+            "(true == true)",
+            "(false != true)",
         ];
         let mut result: Vec<Box<dyn Statement>> = vec![];
         loop {
@@ -372,12 +418,10 @@ mod test {
             p.consume_token();
         }
 
+        println!("size {}", result.len());
+
         for (i, curr) in result.iter().enumerate() {
-            let l = curr.as_any().downcast_ref::<ExpressionStatement>().unwrap();
-            assert_eq!(
-                l.expression.string(),
-                expression_stmt.get(i).unwrap().to_string()
-            );
+            assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
         }
     }
 }

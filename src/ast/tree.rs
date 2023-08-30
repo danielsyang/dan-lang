@@ -9,14 +9,20 @@ pub trait Statement: Node {
     fn statement_node(&self);
 }
 
-impl Debug for dyn Node {
+impl Debug for dyn Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.token_literal())
+        write!(f, "{}", self.string())
     }
 }
 
 pub trait Expression: Node {
     fn expression_node(&self);
+}
+
+impl Debug for dyn Expression {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.string())
+    }
 }
 
 pub struct Program {
