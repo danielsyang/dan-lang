@@ -106,3 +106,38 @@ impl Debug for ExpressionStatement {
         write!(f, "{}", self.token_literal())
     }
 }
+
+pub struct BlockStatement {
+    token: Token,
+    statements: Vec<Box<dyn Statement>>,
+}
+
+impl BlockStatement {
+    pub fn new(token: Token, statements: Vec<Box<dyn Statement>>) -> Self {
+        Self { token, statements }
+    }
+}
+
+impl Node for BlockStatement {
+    fn string(&self) -> String {
+        self.statements
+            .iter()
+            .map(|s| s.string())
+            .collect::<Vec<String>>()
+            .join(" ")
+    }
+
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Statement for BlockStatement {
+    fn statement_node(&self) {}
+}
+
+impl Debug for BlockStatement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.string())
+    }
+}

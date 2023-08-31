@@ -1,13 +1,16 @@
 use std::collections::VecDeque;
 
-use crate::lexer::{
-    lexer::Lexer,
-    token::{Token, TokenType},
+use crate::{
+    ast::expression::IfExpression,
+    lexer::{
+        lexer::Lexer,
+        token::{Token, TokenType},
+    },
 };
 
 use super::{
     expression::{BooleanLiteral, Identifier, InfixExpression, IntegerLiteral, PrefixExpression},
-    statement::{ExpressionStatement, LetStatement, ReturnStatement},
+    statement::{BlockStatement, ExpressionStatement, LetStatement, ReturnStatement},
     tree::{Expression, Statement},
 };
 
@@ -147,6 +150,22 @@ impl Parser {
         stmt
     }
 
+    fn parse_block_statement(&mut self) -> BlockStatement {
+        let block_token = self.current_token.clone();
+        let mut statements: Vec<Box<dyn Statement>> = vec![];
+
+        self.consume_token();
+
+        while self.current_token.kind != TokenType::RightBrace
+            && self.current_token.kind != TokenType::Eof
+        {
+            statements.push(self.parse_program());
+            self.consume_token();
+        }
+
+        BlockStatement::new(block_token, statements)
+    }
+
     fn parse_prefix_expression(&mut self) -> Box<dyn Expression> {
         let current_prefix_expression = self.current_token.clone();
 
@@ -182,6 +201,39 @@ impl Parser {
         exp
     }
 
+    fn parse_if_expression(&mut self) -> Box<dyn Expression> {
+        let if_token = self.current_token.clone();
+
+        if !self.expect_next_token(TokenType::LeftParen) {
+            panic!(
+                "expected token: TokenType::LeftParen, got: {:?}",
+                self.next_token.kind
+            )
+        }
+
+        self.consume_token();
+
+        let condition = self.parse_expression(Precedence::Lowest);
+
+        if !self.expect_next_token(TokenType::RightParen) {
+            panic!(
+                "expected token: TokenType::RightParen, got: {:?}",
+                self.next_token.kind
+            )
+        }
+
+        if !self.expect_next_token(TokenType::LeftBrace) {
+            panic!(
+                "expected token: TokenType::LeftBrace, got: {:?}",
+                self.next_token.kind
+            )
+        }
+
+        let consequence = self.parse_block_statement();
+
+        Box::new(IfExpression::new(if_token, condition, consequence, None))
+    }
+
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
         let mut left_exp: Box<dyn Expression> = match self.current_token.kind {
             TokenType::Int(v) => Box::new(IntegerLiteral::new(&self.current_token, v)),
@@ -191,6 +243,7 @@ impl Parser {
             TokenType::BangSign => self.parse_prefix_expression(),
             TokenType::MinusSign => self.parse_prefix_expression(),
             TokenType::LeftParen => self.parse_grouped_expression(),
+            TokenType::If => self.parse_if_expression(),
             _ => panic!(
                 "parse_expression: not yet implemented, got {:?}",
                 self.current_token.kind
@@ -442,7 +495,7 @@ mod test {
     }
 
     #[test]
-    fn parse_operator_precedence() {
+    fn parse_grouped_expression() {
         let input = "
         1 + (2 + 3) + 4;
         (5 + 5) * 2;
@@ -457,6 +510,34 @@ mod test {
             "(2 / (5 + 5))",
             "(- (5 + 5))",
         ];
+
+        let mut result: Vec<Box<dyn Statement>> = vec![];
+
+        loop {
+            let parsed = p.parse_program();
+            result.push(parsed);
+
+            if p.next_token.kind == TokenType::Eof {
+                break;
+            }
+            p.consume_token();
+        }
+
+        for (i, curr) in result.iter().enumerate() {
+            assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_if_expressions() {
+        let input = "
+        if (x > y) {
+            return x + 10;
+        }
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = ["if (x > y) return x + 10"];
 
         let mut result: Vec<Box<dyn Statement>> = vec![];
 

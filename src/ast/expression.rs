@@ -5,6 +5,8 @@ use crate::{
     lexer::token::Token,
 };
 
+use super::statement::BlockStatement;
+
 pub struct BooleanLiteral {
     token: Token,
     value: bool,
@@ -169,5 +171,55 @@ impl Node for Identifier {
 }
 
 impl Expression for Identifier {
+    fn expression_node(&self) {}
+}
+
+#[derive(Debug)]
+pub struct IfExpression {
+    token: Token,
+    condition: Box<dyn Expression>,
+    consequence: BlockStatement,
+    alternative: Option<BlockStatement>,
+}
+
+impl IfExpression {
+    pub fn new(
+        token: Token,
+        condition: Box<dyn Expression>,
+        consequence: BlockStatement,
+        alternative: Option<BlockStatement>,
+    ) -> Self {
+        Self {
+            token,
+            condition,
+            consequence,
+            alternative,
+        }
+    }
+}
+
+impl Node for IfExpression {
+    fn string(&self) -> String {
+        match &self.alternative {
+            Some(a) => format!(
+                "if {} {} else {}",
+                self.condition.string(),
+                self.consequence.string(),
+                a.string()
+            ),
+            None => format!(
+                "if {} {}",
+                self.condition.string(),
+                self.consequence.string()
+            ),
+        }
+    }
+
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Expression for IfExpression {
     fn expression_node(&self) {}
 }
