@@ -230,8 +230,27 @@ impl Parser {
         }
 
         let consequence = self.parse_block_statement();
+        let mut alternative: Option<BlockStatement> = None;
 
-        Box::new(IfExpression::new(if_token, condition, consequence, None))
+        if self.next_token.kind == TokenType::Else {
+            self.consume_token();
+
+            if !self.expect_next_token(TokenType::LeftBrace) {
+                panic!(
+                    "else: expected token: TokenType::LeftBrace, got {:?}",
+                    self.next_token.kind
+                )
+            }
+
+            alternative = Some(self.parse_block_statement());
+        }
+
+        Box::new(IfExpression::new(
+            if_token,
+            condition,
+            consequence,
+            alternative,
+        ))
     }
 
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
@@ -374,8 +393,9 @@ mod test {
         return 100;
         return foobar;
         ";
+
         let mut p = Parser::new(input);
-        let let_val = ["5", "100", "foobar"];
+        let expected = ["return 5", "return 100", "return foobar"];
         let mut result: Vec<Box<dyn Statement>> = vec![];
         loop {
             let parsed = p.parse_program();
@@ -389,8 +409,7 @@ mod test {
 
         for (i, curr) in result.iter().enumerate() {
             let l = curr.as_any().downcast_ref::<ReturnStatement>().unwrap();
-            assert_eq!(l.token.kind, TokenType::Return);
-            assert_eq!(l.value.token_literal(), let_val.get(i).unwrap().to_string());
+            assert_eq!(l.string(), expected.get(i).unwrap().to_string());
         }
     }
 
@@ -529,15 +548,45 @@ mod test {
     }
 
     #[test]
-    fn parse_if_expressions() {
+    fn parse_if_expression() {
         let input = "
         if (x > y) {
-            return x + 10;
+            return x;
         }
         ";
 
         let mut p = Parser::new(input);
-        let expected = ["if (x > y) return x + 10"];
+        let expected = ["if (x > y) return x"];
+
+        let mut result: Vec<Box<dyn Statement>> = vec![];
+
+        loop {
+            let parsed = p.parse_program();
+            result.push(parsed);
+
+            if p.next_token.kind == TokenType::Eof {
+                break;
+            }
+            p.consume_token();
+        }
+
+        for (i, curr) in result.iter().enumerate() {
+            assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_if_else_expression() {
+        let input = "
+        if (x > y) {
+            return x;
+        } else {
+            return y;
+        }
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = ["if (x > y) return x else return y"];
 
         let mut result: Vec<Box<dyn Statement>> = vec![];
 

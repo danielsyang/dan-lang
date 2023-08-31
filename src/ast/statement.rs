@@ -28,7 +28,7 @@ impl Node for ReturnStatement {
     }
 
     fn string(&self) -> String {
-        format!("{} {};", self.token_literal(), self.value.token_literal())
+        format!("{} {}", self.token_literal(), self.value.token_literal())
     }
 }
 
@@ -120,6 +120,7 @@ impl BlockStatement {
 
 impl Node for BlockStatement {
     fn string(&self) -> String {
+        println!("size: {}", self.statements.len());
         self.statements
             .iter()
             .map(|s| s.string())
