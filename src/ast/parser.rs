@@ -170,6 +170,18 @@ impl Parser {
         Box::new(InfixExpression::new(&curr, left, right_expression))
     }
 
+    fn parse_grouped_expression(&mut self) -> Box<dyn Expression> {
+        self.consume_token();
+
+        let exp = self.parse_expression(Precedence::Lowest);
+
+        if !self.expect_next_token(TokenType::RightParen) {
+            panic!("unexpected next token: TokenType::RightParen")
+        }
+
+        exp
+    }
+
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
         let mut left_exp: Box<dyn Expression> = match self.current_token.kind {
             TokenType::Int(v) => Box::new(IntegerLiteral::new(&self.current_token, v)),
@@ -178,6 +190,7 @@ impl Parser {
             TokenType::False => Box::new(BooleanLiteral::new(&self.current_token, false)),
             TokenType::BangSign => self.parse_prefix_expression(),
             TokenType::MinusSign => self.parse_prefix_expression(),
+            TokenType::LeftParen => self.parse_grouped_expression(),
             _ => panic!(
                 "parse_expression: not yet implemented, got {:?}",
                 self.current_token.kind
@@ -409,6 +422,40 @@ mod test {
             "((- 1) + 2)",
             "(((a + (b * c)) + (d / e)) - f)",
             "((3 > 5) == false)",
+        ];
+
+        let mut result: Vec<Box<dyn Statement>> = vec![];
+
+        loop {
+            let parsed = p.parse_program();
+            result.push(parsed);
+
+            if p.next_token.kind == TokenType::Eof {
+                break;
+            }
+            p.consume_token();
+        }
+
+        for (i, curr) in result.iter().enumerate() {
+            assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_operator_precedence() {
+        let input = "
+        1 + (2 + 3) + 4;
+        (5 + 5) * 2;
+        2 / (5 + 5);
+        -(5 + 5);
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = [
+            "((1 + (2 + 3)) + 4)",
+            "((5 + 5) * 2)",
+            "(2 / (5 + 5))",
+            "(- (5 + 5))",
         ];
 
         let mut result: Vec<Box<dyn Statement>> = vec![];

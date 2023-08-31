@@ -29,7 +29,7 @@ impl Node for BooleanLiteral {
     }
 
     fn string(&self) -> String {
-        format!("{}", self.token_literal())
+        self.token_literal()
     }
 }
 
@@ -104,7 +104,7 @@ impl Node for IntegerLiteral {
     }
 
     fn string(&self) -> String {
-        format!("{}", self.token_literal())
+        self.token_literal()
     }
 }
 
@@ -164,7 +164,7 @@ impl Node for Identifier {
         self.token.literal.clone()
     }
     fn string(&self) -> String {
-        format!("{}", self.value)
+        self.value.to_string()
     }
 }
 
