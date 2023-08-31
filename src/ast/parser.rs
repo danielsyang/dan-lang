@@ -171,7 +171,7 @@ impl Parser {
     }
 
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
-        let left_exp: Box<dyn Expression> = match self.current_token.kind {
+        let mut left_exp: Box<dyn Expression> = match self.current_token.kind {
             TokenType::Int(v) => Box::new(IntegerLiteral::new(&self.current_token, v)),
             TokenType::Identifier => Box::new(Identifier::new(&self.current_token)),
             TokenType::True => Box::new(BooleanLiteral::new(&self.current_token, true)),
@@ -184,9 +184,8 @@ impl Parser {
             ),
         };
 
-        // the original book recommended a for loop, but bc of limitations of my knowledge, I'll tackle this later
-        if (p as u8) < self.next_precedence() && self.next_token.kind != TokenType::Semicolon {
-            let infix = match self.next_token.kind {
+        while (p as u8) < self.next_precedence() && self.next_token.kind != TokenType::Semicolon {
+            left_exp = match self.next_token.kind {
                 TokenType::PlusSign => {
                     self.consume_token();
                     self.parse_infix_expression(left_exp)
@@ -225,8 +224,6 @@ impl Parser {
                 }
                 _ => left_exp,
             };
-
-            return infix;
         }
 
         left_exp
@@ -267,7 +264,6 @@ impl Parser {
 mod test {
     use crate::{
         ast::{
-            expression::InfixExpression,
             statement::{ExpressionStatement, LetStatement, ReturnStatement},
             tree::{Node, Statement},
         },
@@ -390,6 +386,8 @@ mod test {
         true == true;
         false != true;
         5 + 5 * 5;
+        -1 + 2;
+        a + b * c + d / e - f;
         ";
 
         let mut p = Parser::new(input);
@@ -407,9 +405,13 @@ mod test {
             "(bar * bar)",
             "(true == true)",
             "(false != true)",
-            "(5 + (5 * 5))"
+            "(5 + (5 * 5))",
+            "((- 1) + 2)",
+            "(((a + (b * c)) + (d / e)) - f)",
         ];
+
         let mut result: Vec<Box<dyn Statement>> = vec![];
+
         loop {
             let parsed = p.parse_program();
             result.push(parsed);
@@ -419,8 +421,6 @@ mod test {
             }
             p.consume_token();
         }
-
-        println!("size {}", result.len());
 
         for (i, curr) in result.iter().enumerate() {
             assert_eq!(curr.string(), expected.get(i).unwrap().to_string());

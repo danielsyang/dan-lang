@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 #[derive(Debug, PartialEq, Clone, Copy, Eq, Hash)]
 pub enum TokenType {
     Comma,
