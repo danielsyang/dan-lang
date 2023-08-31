@@ -387,6 +387,7 @@ mod test {
         5 + 5 * 5;
         -1 + 2;
         a + b * c + d / e - f;
+        3 > 5 == false;
         ";
 
         let mut p = Parser::new(input);
@@ -407,6 +408,7 @@ mod test {
             "(5 + (5 * 5))",
             "((- 1) + 2)",
             "(((a + (b * c)) + (d / e)) - f)",
+            "((3 > 5) == false)",
         ];
 
         let mut result: Vec<Box<dyn Statement>> = vec![];
