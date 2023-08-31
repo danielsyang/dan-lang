@@ -278,9 +278,10 @@ mod test {
         let x = 5;
         let y = 100;
         let foobar = y;
+        let barfoo = false;
         ";
-        let let_name = ["x", "y", "foobar"];
-        let let_val = ["5", "100", "y"];
+        let expected = ["let x 5", "let y 100", "let foobar y", "let barfoo false"];
+
         let mut p = Parser::new(input);
 
         let mut result: Vec<Box<dyn Statement>> = vec![];
@@ -296,9 +297,7 @@ mod test {
 
         for (i, curr) in result.iter().enumerate() {
             let l = curr.as_any().downcast_ref::<LetStatement>().unwrap();
-            assert_eq!(l.token.kind, TokenType::Let);
-            assert_eq!(l.name.token_literal(), let_name.get(i).unwrap().to_string());
-            assert_eq!(l.value.token_literal(), let_val.get(i).unwrap().to_string());
+            assert_eq!(l.string(), expected.get(i).unwrap().to_string());
         }
     }
 

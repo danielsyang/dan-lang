@@ -44,6 +44,18 @@ impl LetStatement {
     }
 }
 
+impl Debug for LetStatement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "{} {} {}",
+            self.token.literal,
+            self.name.string(),
+            self.value.string()
+        )
+    }
+}
+
 impl Statement for LetStatement {
     fn statement_node(&self) {}
 }
@@ -55,7 +67,7 @@ impl Node for LetStatement {
 
     fn string(&self) -> String {
         format!(
-            "{} {} = {}",
+            "{} {} {}",
             self.token_literal(),
             self.name.token_literal(),
             self.value.token_literal()
