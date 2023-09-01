@@ -1,4 +1,4 @@
-use crate::lexer::token::TokenType;
+use crate::lex::token::TokenType;
 
 use super::token::Token;
 
@@ -164,7 +164,7 @@ impl Lexer {
 
 #[cfg(test)]
 mod test {
-    use crate::lexer::{
+    use crate::lex::{
         lexer::Lexer,
         token::{Token, TokenType},
     };

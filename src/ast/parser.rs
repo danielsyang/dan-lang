@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use crate::{
     ast::expression::IfExpression,
-    lexer::{
+    lex::{
         lexer::Lexer,
         token::{Token, TokenType},
     },
@@ -16,7 +16,7 @@ use super::{
 
 #[derive(Clone, Copy, Debug)]
 enum Precedence {
-    Int = 0,
+    _Int = 0,
     Lowest = 1,
     Equals = 2,
     LessGreater = 3,
@@ -28,7 +28,7 @@ enum Precedence {
 
 pub struct Parser {
     pub tokens: VecDeque<Token>,
-    errors: Vec<String>,
+    _errors: Vec<String>,
     current_token: Token,
     pub next_token: Token,
 }
@@ -53,7 +53,7 @@ impl Parser {
 
         Self {
             tokens,
-            errors: vec![],
+            _errors: vec![],
             current_token,
             next_token,
         }
@@ -352,7 +352,7 @@ mod test {
             statement::{ExpressionStatement, LetStatement, ReturnStatement},
             tree::{Node, Statement},
         },
-        lexer::token::TokenType,
+        lex::token::TokenType,
     };
 
     use super::Parser;

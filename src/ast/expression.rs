@@ -2,21 +2,21 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node},
-    lexer::token::Token,
+    lex::token::Token,
 };
 
 use super::statement::BlockStatement;
 
 pub struct BooleanLiteral {
     token: Token,
-    value: bool,
+    _value: bool,
 }
 
 impl BooleanLiteral {
     pub fn new(token: &Token, value: bool) -> Self {
         Self {
             token: token.clone(),
-            value,
+            _value: value,
         }
     }
 }
@@ -84,14 +84,14 @@ impl Debug for InfixExpression {
 
 pub struct IntegerLiteral {
     token: Token,
-    value: i64,
+    _value: i64,
 }
 
 impl IntegerLiteral {
     pub fn new(token: &Token, value: i64) -> Self {
         Self {
             token: token.clone(),
-            value,
+            _value: value,
         }
     }
 }
@@ -221,5 +221,37 @@ impl Node for IfExpression {
 }
 
 impl Expression for IfExpression {
+    fn expression_node(&self) {}
+}
+
+pub struct FunctionLiteral {
+    token: Token,
+    parameters: Vec<Identifier>,
+    body: BlockStatement,
+}
+
+impl Node for FunctionLiteral {
+    fn string(&self) -> String {
+        let params = self
+            .parameters
+            .iter()
+            .map(|x| x.string())
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        format!(
+            "{} ( {} ) {}",
+            self.token_literal(),
+            params,
+            self.body.string()
+        )
+    }
+
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Expression for FunctionLiteral {
     fn expression_node(&self) {}
 }

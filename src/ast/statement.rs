@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node, Statement},
-    lexer::token::Token,
+    lex::token::Token,
 };
 
 use super::expression::Identifier;

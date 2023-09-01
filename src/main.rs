@@ -1,10 +1,10 @@
 use ast::parser::Parser;
-use lexer::token::TokenType;
+use lex::token::TokenType;
 
 use crate::ast::tree::Statement;
 
 mod ast;
-mod lexer;
+mod lex;
 
 fn main() {
     // let input = "let x = 55 + 5;";

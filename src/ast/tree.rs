@@ -25,7 +25,7 @@ impl Debug for dyn Expression {
     }
 }
 
-pub struct Program {
+pub struct _Program {
     statements: Vec<Box<dyn Statement>>,
 }
 
