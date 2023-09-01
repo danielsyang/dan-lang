@@ -26,3 +26,10 @@
 - [x] ExpressionStatement
 - [x] BlockStatement
 - [ ] Continue working on the parser.
+
+#### 01 Sept 2023
+
+- Parser
+- [x] FunctionLiteral
+- [x] CallExpression
+- [ ] Clean up the parser

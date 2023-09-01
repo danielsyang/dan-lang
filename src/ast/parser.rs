@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use crate::{
-    ast::expression::IfExpression,
+    ast::expression::{CallExpression, FunctionLiteral, IfExpression},
     lex::{
         lexer::Lexer,
         token::{Token, TokenType},
@@ -253,6 +253,101 @@ impl Parser {
         ))
     }
 
+    fn parse_function_literal(&mut self) -> Box<dyn Expression> {
+        let fn_token = self.current_token.clone();
+
+        // fn name
+        if !self.expect_next_token(TokenType::Identifier) {
+            panic!(
+                "expected TokenType::Identifier, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        let identifier = Identifier::new(&self.current_token);
+
+        if !self.expect_next_token(TokenType::LeftParen) {
+            panic!(
+                "expected TokenType::LeftParen, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        let params = self.parse_function_parameters();
+
+        if !self.expect_next_token(TokenType::LeftBrace) {
+            panic!(
+                "expected TokenType::LeftParen, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        let body = self.parse_block_statement();
+
+        Box::new(FunctionLiteral::new(fn_token, identifier, params, body))
+    }
+
+    fn parse_function_parameters(&mut self) -> Vec<Identifier> {
+        let mut identifiers: Vec<Identifier> = vec![];
+
+        if self.next_token.kind == TokenType::RightParen {
+            self.consume_token();
+            return identifiers;
+        }
+
+        self.consume_token();
+
+        identifiers.push(Identifier::new(&self.current_token));
+
+        while self.next_token.kind == TokenType::Comma {
+            self.consume_token();
+            self.consume_token();
+            identifiers.push(Identifier::new(&self.current_token));
+        }
+
+        if !self.expect_next_token(TokenType::RightParen) {
+            panic!(
+                "expected TokenType::RightParen, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        identifiers
+    }
+
+    fn parse_call_expression(&mut self, function: Box<dyn Expression>) -> Box<dyn Expression> {
+        let call_token = self.current_token.clone();
+        let args = self.parse_call_arguments();
+        Box::new(CallExpression::new(call_token, function, args))
+    }
+
+    fn parse_call_arguments(&mut self) -> Vec<Box<dyn Expression>> {
+        let mut args: Vec<Box<dyn Expression>> = vec![];
+
+        if self.next_token.kind == TokenType::RightParen {
+            self.consume_token();
+            return args;
+        }
+
+        self.consume_token();
+        args.push(self.parse_expression(Precedence::Lowest));
+
+        while self.next_token.kind == TokenType::Comma {
+            self.consume_token();
+            self.consume_token();
+            args.push(self.parse_expression(Precedence::Lowest));
+        }
+
+        if !self.expect_next_token(TokenType::RightParen) {
+            panic!(
+                "parse_call_arguments expected TokenType::RightParen, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        args
+    }
+
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
         let mut left_exp: Box<dyn Expression> = match self.current_token.kind {
             TokenType::Int(v) => Box::new(IntegerLiteral::new(&self.current_token, v)),
@@ -263,6 +358,7 @@ impl Parser {
             TokenType::MinusSign => self.parse_prefix_expression(),
             TokenType::LeftParen => self.parse_grouped_expression(),
             TokenType::If => self.parse_if_expression(),
+            TokenType::Function => self.parse_function_literal(),
             _ => panic!(
                 "parse_expression: not yet implemented, got {:?}",
                 self.current_token.kind
@@ -305,7 +401,7 @@ impl Parser {
                 }
                 TokenType::LeftParen => {
                     self.consume_token();
-                    todo!("parse_call_expression not yet implemented")
+                    self.parse_call_expression(left_exp)
                 }
                 _ => left_exp,
             };
@@ -587,6 +683,87 @@ mod test {
 
         let mut p = Parser::new(input);
         let expected = ["if (x > y) return x else return y"];
+
+        let mut result: Vec<Box<dyn Statement>> = vec![];
+
+        loop {
+            let parsed = p.parse_program();
+            result.push(parsed);
+
+            if p.next_token.kind == TokenType::Eof {
+                break;
+            }
+            p.consume_token();
+        }
+
+        for (i, curr) in result.iter().enumerate() {
+            assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_function_parameters() {
+        let input = "
+        fn abc(x, y, w, z, a, b, c) { }
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = ["fn abc ( x, y, w, z, a, b, c ) "];
+
+        let mut result: Vec<Box<dyn Statement>> = vec![];
+
+        loop {
+            let parsed = p.parse_program();
+            result.push(parsed);
+
+            if p.next_token.kind == TokenType::Eof {
+                break;
+            }
+            p.consume_token();
+        }
+
+        for (i, curr) in result.iter().enumerate() {
+            assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_function_literal() {
+        let input = "
+        fn abc(x, y) { 
+            return x;
+        }
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = ["fn abc ( x, y ) return x"];
+
+        let mut result: Vec<Box<dyn Statement>> = vec![];
+
+        loop {
+            let parsed = p.parse_program();
+            result.push(parsed);
+
+            if p.next_token.kind == TokenType::Eof {
+                break;
+            }
+            p.consume_token();
+        }
+
+        for (i, curr) in result.iter().enumerate() {
+            assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_call_expression() {
+        let input = "
+        add(1, 2 * 3, 4 + 5);
+        multiply (1, 2);
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = ["add ( 1, (2 * 3), (4 + 5) )", "multiply ( 1, 2 )"];
 
         let mut result: Vec<Box<dyn Statement>> = vec![];
 

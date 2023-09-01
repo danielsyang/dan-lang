@@ -226,8 +226,25 @@ impl Expression for IfExpression {
 
 pub struct FunctionLiteral {
     token: Token,
+    identifier: Identifier,
     parameters: Vec<Identifier>,
     body: BlockStatement,
+}
+
+impl FunctionLiteral {
+    pub fn new(
+        token: Token,
+        identifier: Identifier,
+        parameters: Vec<Identifier>,
+        body: BlockStatement,
+    ) -> Self {
+        Self {
+            token,
+            identifier,
+            parameters,
+            body,
+        }
+    }
 }
 
 impl Node for FunctionLiteral {
@@ -240,8 +257,9 @@ impl Node for FunctionLiteral {
             .join(", ");
 
         format!(
-            "{} ( {} ) {}",
+            "{} {} ( {} ) {}",
             self.token_literal(),
+            self.identifier.string(),
             params,
             self.body.string()
         )
@@ -253,5 +271,48 @@ impl Node for FunctionLiteral {
 }
 
 impl Expression for FunctionLiteral {
+    fn expression_node(&self) {}
+}
+
+pub struct CallExpression {
+    token: Token,
+    function: Box<dyn Expression>,
+    arguments: Vec<Box<dyn Expression>>,
+}
+
+impl CallExpression {
+    pub fn new(
+        token: Token,
+        function: Box<dyn Expression>,
+        arguments: Vec<Box<dyn Expression>>,
+    ) -> Self {
+        Self {
+            token,
+            function,
+            arguments,
+        }
+    }
+}
+
+impl Node for CallExpression {
+    fn string(&self) -> String {
+        let func = self.function.string();
+
+        let args = self
+            .arguments
+            .iter()
+            .map(|x| x.string())
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        format!("{} ( {} )", func, args)
+    }
+
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+}
+
+impl Expression for CallExpression {
     fn expression_node(&self) {}
 }
