@@ -120,7 +120,6 @@ impl BlockStatement {
 
 impl Node for BlockStatement {
     fn string(&self) -> String {
-        println!("size: {}", self.statements.len());
         self.statements
             .iter()
             .map(|s| s.string())

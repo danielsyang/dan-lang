@@ -487,11 +487,11 @@ mod test {
         let input = "
         return 5;
         return 100;
-        return foobar;
+        return foobar + 2;
         ";
 
         let mut p = Parser::new(input);
-        let expected = ["return 5", "return 100", "return foobar"];
+        let expected = ["return 5", "return 100", "return (+ foobar 2)"];
         let mut result: Vec<Box<dyn Statement>> = vec![];
         loop {
             let parsed = p.parse_program();
@@ -733,10 +733,14 @@ mod test {
         fn abc(x, y) { 
             return x;
         }
+
+        fn xyz(a) {
+            return a + 3;
+        }
         ";
 
         let mut p = Parser::new(input);
-        let expected = ["fn abc ( x, y ) return x"];
+        let expected = ["fn abc ( x, y ) return x", "fn xyz ( a ) return (+ a 3)"];
 
         let mut result: Vec<Box<dyn Statement>> = vec![];
 

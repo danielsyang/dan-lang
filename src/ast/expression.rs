@@ -38,7 +38,6 @@ impl Node for BooleanLiteral {
 pub struct InfixExpression {
     token: Token,
     left: Box<dyn Expression>,
-    operator: String,
     right: Box<dyn Expression>,
 }
 
@@ -50,7 +49,6 @@ impl InfixExpression {
     ) -> Self {
         Self {
             token: token.clone(),
-            operator: token.literal.clone(),
             left: left_expression,
             right: right_expression,
         }
@@ -62,24 +60,23 @@ impl Node for InfixExpression {
         format!(
             "({} {} {})",
             self.left.string(),
-            self.operator,
+            self.token.literal,
             self.right.string()
         )
     }
 
     fn token_literal(&self) -> String {
-        self.token.literal.clone()
+        format!(
+            "({} {} {})",
+            self.token.literal.clone(),
+            self.left.string(),
+            self.right.string()
+        )
     }
 }
 
 impl Expression for InfixExpression {
     fn expression_node(&self) {}
-}
-
-impl Debug for InfixExpression {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.token_literal())
-    }
 }
 
 pub struct IntegerLiteral {
