@@ -2,10 +2,11 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node},
+    eval::object::{Number, Object},
     lex::token::Token,
 };
 
-use super::{statement::BlockStatement, tree::ExpressionType};
+use super::statement::BlockStatement;
 
 pub struct BooleanLiteral {
     token: Token,
@@ -23,6 +24,10 @@ impl BooleanLiteral {
 
 impl Expression for BooleanLiteral {
     fn expression_node(&self) {}
+
+    fn eval_expression(&self) -> Box<dyn Object> {
+        todo!("eval_self: BooleanLiteral")
+    }
 }
 
 impl Node for BooleanLiteral {
@@ -34,8 +39,8 @@ impl Node for BooleanLiteral {
         self.token_literal()
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::BooleanLiteral
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: BooleanLiteral")
     }
 }
 
@@ -78,13 +83,17 @@ impl Node for InfixExpression {
         )
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::InfixExpression
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: InfixExpression")
     }
 }
 
 impl Expression for InfixExpression {
     fn expression_node(&self) {}
+
+    fn eval_expression(&self) -> Box<dyn Object> {
+        todo!("eval_self: InfixExpression")
+    }
 }
 
 pub struct IntegerLiteral {
@@ -103,6 +112,10 @@ impl IntegerLiteral {
 
 impl Expression for IntegerLiteral {
     fn expression_node(&self) {}
+
+    fn eval_expression(&self) -> Box<dyn Object> {
+        Box::new(Number::new(self.value))
+    }
 }
 
 impl Node for IntegerLiteral {
@@ -114,8 +127,8 @@ impl Node for IntegerLiteral {
         format!("{:?} {}", self.token.kind, self.token_literal())
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::IntegerLiteral
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: IntegerLiteral")
     }
 }
 
@@ -144,13 +157,17 @@ impl Node for PrefixExpression {
         self.token.literal.clone()
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::PrefixExpression
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: PrefixExpression")
     }
 }
 
 impl Expression for PrefixExpression {
     fn expression_node(&self) {}
+
+    fn eval_expression(&self) -> Box<dyn Object> {
+        todo!("eval_self: PrefixExpression")
+    }
 }
 
 impl Debug for PrefixExpression {
@@ -183,13 +200,17 @@ impl Node for Identifier {
         self.value.to_string()
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::Identifier
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: Identifier")
     }
 }
 
 impl Expression for Identifier {
     fn expression_node(&self) {}
+
+    fn eval_expression(&self) -> Box<dyn Object> {
+        todo!("eval_self: Identifier")
+    }
 }
 
 #[derive(Debug)]
@@ -237,13 +258,17 @@ impl Node for IfExpression {
         self.token.literal.clone()
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::IfExpression
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: IfExpression")
     }
 }
 
 impl Expression for IfExpression {
     fn expression_node(&self) {}
+
+    fn eval_expression(&self) -> Box<dyn Object> {
+        todo!("eval_self: IfExpression")
+    }
 }
 
 pub struct FunctionLiteral {
@@ -291,13 +316,17 @@ impl Node for FunctionLiteral {
         self.token.literal.clone()
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::FunctionLiteral
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: FunctionLiteral")
     }
 }
 
 impl Expression for FunctionLiteral {
     fn expression_node(&self) {}
+
+    fn eval_expression(&self) -> Box<dyn Object> {
+        todo!("eval_self: FunctionLiteral")
+    }
 }
 
 pub struct CallExpression {
@@ -338,11 +367,15 @@ impl Node for CallExpression {
         self.token.literal.clone()
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::CallExpression
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: CallExpression")
     }
 }
 
 impl Expression for CallExpression {
     fn expression_node(&self) {}
+
+    fn eval_expression(&self) -> Box<dyn Object> {
+        todo!("eval_self: CallExpression")
+    }
 }

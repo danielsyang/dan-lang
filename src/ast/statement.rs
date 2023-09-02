@@ -2,10 +2,11 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node, Statement},
+    eval::object::Object,
     lex::token::Token,
 };
 
-use super::{expression::Identifier, tree::ExpressionType};
+use super::expression::Identifier;
 
 pub struct ReturnStatement {
     pub token: Token,
@@ -31,8 +32,8 @@ impl Node for ReturnStatement {
         format!("{} {}", self.token_literal(), self.value.token_literal())
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::ReturnStatement
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: ReturnStatement")
     }
 }
 
@@ -78,8 +79,8 @@ impl Node for LetStatement {
         )
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::LetStatement
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: LetStatement")
     }
 }
 
@@ -107,8 +108,9 @@ impl Node for ExpressionStatement {
         format!("{:?}", self.expression)
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::ExpressionStatement
+    fn eval_self(&self) -> Box<dyn Object> {
+        // Expression::eval_self(self.expression.eval_self())
+        self.expression.eval_expression()
     }
 }
 
@@ -142,8 +144,8 @@ impl Node for BlockStatement {
         self.token.literal.clone()
     }
 
-    fn expression_type(&self) -> ExpressionType {
-        ExpressionType::BlockStatement
+    fn eval_self(&self) -> Box<dyn Object> {
+        todo!("eval_self: BlockStatement")
     }
 }
 

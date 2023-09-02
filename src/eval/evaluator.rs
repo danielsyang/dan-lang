@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use crate::ast::{
     statement::ExpressionStatement,
     tree::{AToAny, Program, Statement},
@@ -12,7 +14,9 @@ pub fn eval(p: Program) {
 }
 
 pub fn eval_statements(node: &Box<dyn Statement>) -> () {
-    let l = node.as_any().downcast_ref::<ExpressionStatement>();
+    println!("inside node: {:?}", node);
+    // let l = node.as_any().downcast_ref::<Box<ExpressionStatement>>();
+    let l = (node as &dyn Any).downcast_ref::<ExpressionStatement>();
     println!("inside eval_statements {:?}", l);
 }
 
@@ -56,10 +60,7 @@ pub fn eval_statements(node: &Box<dyn Statement>) -> () {
 #[cfg(test)]
 mod test {
 
-    use crate::{
-        ast::{parser::Parser, statement::ExpressionStatement},
-        eval::evaluator::eval_statements,
-    };
+    use crate::ast::parser::Parser;
 
     // use super::eval_statements;
 
@@ -73,10 +74,8 @@ mod test {
         let program = p.build_ast();
 
         for node in program.statements.iter() {
-            eval_statements(node);
-            let l = node.as_any().downcast_ref::<ExpressionStatement>().unwrap();
-            println!("outside eval statements {:?}", l);
+            let obj = node.eval_self();
+            // println!("{:?}", obj);
         }
-        assert_eq!(1, 2)
     }
 }

@@ -1,26 +1,12 @@
 use std::{any::Any, fmt::Debug};
 
-#[derive(Debug)]
-pub enum ExpressionType {
-    IntegerLiteral,
-    InfixExpression,
-    BooleanLiteral,
-    PrefixExpression,
-    Identifier,
-    IfExpression,
-    FunctionLiteral,
-    CallExpression,
-    ReturnStatement,
-    LetStatement,
-    ExpressionStatement,
-    BlockStatement,
-}
+use crate::eval::object::Object;
 
 pub trait Node {
     fn token_literal(&self) -> String;
     fn string(&self) -> String;
 
-    fn expression_type(&self) -> ExpressionType;
+    fn eval_self(&self) -> Box<dyn Object>;
 }
 
 pub trait Statement: Node + AToAny {
@@ -35,6 +21,8 @@ impl Debug for dyn Statement {
 
 pub trait Expression: Node {
     fn expression_node(&self);
+
+    fn eval_expression(&self) -> Box<dyn Object>;
 }
 
 impl Debug for dyn Expression {
