@@ -1,11 +1,29 @@
 use std::{any::Any, fmt::Debug};
 
-pub trait Node: AToAny {
-    fn token_literal(&self) -> String;
-    fn string(&self) -> String;
+#[derive(Debug)]
+pub enum ExpressionType {
+    IntegerLiteral,
+    InfixExpression,
+    BooleanLiteral,
+    PrefixExpression,
+    Identifier,
+    IfExpression,
+    FunctionLiteral,
+    CallExpression,
+    ReturnStatement,
+    LetStatement,
+    ExpressionStatement,
+    BlockStatement,
 }
 
-pub trait Statement: Node {
+pub trait Node {
+    fn token_literal(&self) -> String;
+    fn string(&self) -> String;
+
+    fn expression_type(&self) -> ExpressionType;
+}
+
+pub trait Statement: Node + AToAny {
     fn statement_node(&self);
 }
 
@@ -25,8 +43,8 @@ impl Debug for dyn Expression {
     }
 }
 
-pub struct _Program {
-    statements: Vec<Box<dyn Statement>>,
+pub struct Program {
+    pub statements: Vec<Box<dyn Statement>>,
 }
 
 pub trait AToAny: 'static {

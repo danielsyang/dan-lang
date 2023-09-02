@@ -5,7 +5,7 @@ use crate::{
     lex::token::Token,
 };
 
-use super::expression::Identifier;
+use super::{expression::Identifier, tree::ExpressionType};
 
 pub struct ReturnStatement {
     pub token: Token,
@@ -29,6 +29,10 @@ impl Node for ReturnStatement {
 
     fn string(&self) -> String {
         format!("{} {}", self.token_literal(), self.value.token_literal())
+    }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::ReturnStatement
     }
 }
 
@@ -73,6 +77,10 @@ impl Node for LetStatement {
             self.value.token_literal()
         )
     }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::LetStatement
+    }
 }
 
 pub struct ExpressionStatement {
@@ -97,13 +105,16 @@ impl Node for ExpressionStatement {
 
     fn string(&self) -> String {
         format!("{:?}", self.expression)
-        // self.expression.token_literal()
+    }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::ExpressionStatement
     }
 }
 
 impl Debug for ExpressionStatement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.token_literal())
+        write!(f, "{:?} {}", self.token.kind, self.token_literal())
     }
 }
 
@@ -129,6 +140,10 @@ impl Node for BlockStatement {
 
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::BlockStatement
     }
 }
 

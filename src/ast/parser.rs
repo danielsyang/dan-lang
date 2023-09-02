@@ -11,7 +11,7 @@ use crate::{
 use super::{
     expression::{BooleanLiteral, Identifier, InfixExpression, IntegerLiteral, PrefixExpression},
     statement::{BlockStatement, ExpressionStatement, LetStatement, ReturnStatement},
-    tree::{Expression, Statement},
+    tree::{Expression, Program, Statement},
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -60,27 +60,37 @@ impl Parser {
     }
 
     pub fn consume_token(&mut self) {
-        println!(
-            "moved current_token {:?} to {:?}",
-            self.current_token.kind, self.next_token.kind
-        );
         self.current_token = self.next_token.clone();
         self.next_token = self
             .tokens
             .pop_front()
             .expect("Invalid state, there are no more tokens to consume.");
-        println!(
-            "moved next_token {:?} to {:?}",
-            self.current_token.kind, self.next_token.kind
-        );
     }
 
     pub fn parse_program(&mut self) -> Box<dyn Statement> {
-        match self.current_token.kind {
+        let stmt: Box<dyn Statement> = match self.current_token.kind {
             TokenType::Let => Box::new(self.parse_let_statement()),
             TokenType::Return => Box::new(self.parse_return_statement()),
             _ => Box::new(self.parse_expression_statement()),
+        };
+
+        stmt
+    }
+
+    pub fn build_ast(&mut self) -> Program {
+        let mut result: Vec<Box<dyn Statement>> = vec![];
+
+        loop {
+            let parsed = self.parse_program();
+            result.push(parsed);
+
+            if self.next_token.kind == TokenType::Eof {
+                break;
+            }
+            self.consume_token();
         }
+
+        Program { statements: result }
     }
 
     fn expect_next_token(&mut self, kind: TokenType) -> bool {
@@ -142,7 +152,6 @@ impl Parser {
         let curr = self.current_token.clone();
         let exp = self.parse_expression(Precedence::Lowest);
         let stmt = ExpressionStatement::new(curr, exp);
-
         if self.next_token.kind == TokenType::Semicolon {
             self.consume_token();
         }
@@ -443,12 +452,9 @@ impl Parser {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        ast::{
-            statement::{ExpressionStatement, LetStatement, ReturnStatement},
-            tree::{Node, Statement},
-        },
-        lex::token::TokenType,
+    use crate::ast::{
+        statement::{ExpressionStatement, LetStatement, ReturnStatement},
+        tree::Node,
     };
 
     use super::Parser;
@@ -465,18 +471,9 @@ mod test {
 
         let mut p = Parser::new(input);
 
-        let mut result: Vec<Box<dyn Statement>> = vec![];
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
+        let result = p.build_ast();
 
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
-
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             let l = curr.as_any().downcast_ref::<LetStatement>().unwrap();
             assert_eq!(l.string(), expected.get(i).unwrap().to_string());
         }
@@ -491,19 +488,10 @@ mod test {
         ";
 
         let mut p = Parser::new(input);
-        let expected = ["return 5", "return 100", "return (+ foobar 2)"];
-        let mut result: Vec<Box<dyn Statement>> = vec![];
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
+        let expected = ["return 5", "return 100", "return (+ foobar Int(2) 2)"];
+        let result = p.build_ast();
 
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
-
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             let l = curr.as_any().downcast_ref::<ReturnStatement>().unwrap();
             assert_eq!(l.string(), expected.get(i).unwrap().to_string());
         }
@@ -518,29 +506,23 @@ mod test {
         -foobar;
         !true;
         !false;
+        5;
         ";
 
         let mut p = Parser::new(input);
         let expression_stmt = [
-            "(! 5)",
-            "(- 15)",
+            "(! Int(5) 5)",
+            "(- Int(15) 15)",
             "(! foobar)",
             "(- foobar)",
             "(! true)",
             "(! false)",
+            "Int(5) 5",
         ];
-        let mut result: Vec<Box<dyn Statement>> = vec![];
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
 
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
+        let result = p.build_ast();
 
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             let l = curr.as_any().downcast_ref::<ExpressionStatement>().unwrap();
             assert_eq!(
                 l.expression.string(),
@@ -573,38 +555,28 @@ mod test {
 
         let mut p = Parser::new(input);
         let expected = [
-            "(5 + 5)",
-            "(5 - 5)",
-            "(5 * 5)",
-            "(5 / 5)",
-            "(5 > 5)",
-            "(5 < 5)",
-            "(5 == 5)",
-            "(5 != 5)",
+            "(Int(5) 5 + Int(5) 5)",
+            "(Int(5) 5 - Int(5) 5)",
+            "(Int(5) 5 * Int(5) 5)",
+            "(Int(5) 5 / Int(5) 5)",
+            "(Int(5) 5 > Int(5) 5)",
+            "(Int(5) 5 < Int(5) 5)",
+            "(Int(5) 5 == Int(5) 5)",
+            "(Int(5) 5 != Int(5) 5)",
             "(foobar + foobar)",
             "(bar - bar)",
             "(bar * bar)",
             "(true == true)",
             "(false != true)",
-            "(5 + (5 * 5))",
-            "((- 1) + 2)",
+            "(Int(5) 5 + (Int(5) 5 * Int(5) 5))",
+            "((- Int(1) 1) + Int(2) 2)",
             "(((a + (b * c)) + (d / e)) - f)",
-            "((3 > 5) == false)",
+            "((Int(3) 3 > Int(5) 5) == false)",
         ];
 
-        let mut result: Vec<Box<dyn Statement>> = vec![];
+        let result = p.build_ast();
 
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
-
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
-
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
         }
     }
@@ -620,25 +592,15 @@ mod test {
 
         let mut p = Parser::new(input);
         let expected = [
-            "((1 + (2 + 3)) + 4)",
-            "((5 + 5) * 2)",
-            "(2 / (5 + 5))",
-            "(- (5 + 5))",
+            "((Int(1) 1 + (Int(2) 2 + Int(3) 3)) + Int(4) 4)",
+            "((Int(5) 5 + Int(5) 5) * Int(2) 2)",
+            "(Int(2) 2 / (Int(5) 5 + Int(5) 5))",
+            "(- (Int(5) 5 + Int(5) 5))",
         ];
 
-        let mut result: Vec<Box<dyn Statement>> = vec![];
+        let result = p.build_ast();
 
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
-
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
-
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
         }
     }
@@ -654,19 +616,9 @@ mod test {
         let mut p = Parser::new(input);
         let expected = ["if (x > y) return x"];
 
-        let mut result: Vec<Box<dyn Statement>> = vec![];
+        let result = p.build_ast();
 
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
-
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
-
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
         }
     }
@@ -684,19 +636,9 @@ mod test {
         let mut p = Parser::new(input);
         let expected = ["if (x > y) return x else return y"];
 
-        let mut result: Vec<Box<dyn Statement>> = vec![];
+        let result = p.build_ast();
 
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
-
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
-
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
         }
     }
@@ -710,19 +652,9 @@ mod test {
         let mut p = Parser::new(input);
         let expected = ["fn abc ( x, y, w, z, a, b, c ) "];
 
-        let mut result: Vec<Box<dyn Statement>> = vec![];
+        let result = p.build_ast();
 
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
-
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
-
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
         }
     }
@@ -740,21 +672,13 @@ mod test {
         ";
 
         let mut p = Parser::new(input);
-        let expected = ["fn abc ( x, y ) return x", "fn xyz ( a ) return (+ a 3)"];
+        let expected = [
+            "fn abc ( x, y ) return x",
+            "fn xyz ( a ) return (+ a Int(3) 3)",
+        ];
+        let result = p.build_ast();
 
-        let mut result: Vec<Box<dyn Statement>> = vec![];
-
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
-
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
-
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
         }
     }
@@ -767,21 +691,13 @@ mod test {
         ";
 
         let mut p = Parser::new(input);
-        let expected = ["add ( 1, (2 * 3), (4 + 5) )", "multiply ( 1, 2 )"];
+        let expected = [
+            "add ( Int(1) 1, (Int(2) 2 * Int(3) 3), (Int(4) 4 + Int(5) 5) )",
+            "multiply ( Int(1) 1, Int(2) 2 )",
+        ];
+        let result = p.build_ast();
 
-        let mut result: Vec<Box<dyn Statement>> = vec![];
-
-        loop {
-            let parsed = p.parse_program();
-            result.push(parsed);
-
-            if p.next_token.kind == TokenType::Eof {
-                break;
-            }
-            p.consume_token();
-        }
-
-        for (i, curr) in result.iter().enumerate() {
+        for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
         }
     }

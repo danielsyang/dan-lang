@@ -5,7 +5,7 @@ use crate::{
     lex::token::Token,
 };
 
-use super::statement::BlockStatement;
+use super::{statement::BlockStatement, tree::ExpressionType};
 
 pub struct BooleanLiteral {
     token: Token,
@@ -32,6 +32,10 @@ impl Node for BooleanLiteral {
 
     fn string(&self) -> String {
         self.token_literal()
+    }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::BooleanLiteral
     }
 }
 
@@ -73,6 +77,10 @@ impl Node for InfixExpression {
             self.right.string()
         )
     }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::InfixExpression
+    }
 }
 
 impl Expression for InfixExpression {
@@ -81,14 +89,14 @@ impl Expression for InfixExpression {
 
 pub struct IntegerLiteral {
     token: Token,
-    _value: i64,
+    pub value: i64,
 }
 
 impl IntegerLiteral {
     pub fn new(token: &Token, value: i64) -> Self {
         Self {
             token: token.clone(),
-            _value: value,
+            value,
         }
     }
 }
@@ -103,7 +111,11 @@ impl Node for IntegerLiteral {
     }
 
     fn string(&self) -> String {
-        self.token_literal()
+        format!("{:?} {}", self.token.kind, self.token_literal())
+    }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::IntegerLiteral
     }
 }
 
@@ -130,6 +142,10 @@ impl Node for PrefixExpression {
 
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::PrefixExpression
     }
 }
 
@@ -162,8 +178,13 @@ impl Node for Identifier {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }
+
     fn string(&self) -> String {
         self.value.to_string()
+    }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::Identifier
     }
 }
 
@@ -215,6 +236,10 @@ impl Node for IfExpression {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::IfExpression
+    }
 }
 
 impl Expression for IfExpression {
@@ -265,6 +290,10 @@ impl Node for FunctionLiteral {
     fn token_literal(&self) -> String {
         self.token.literal.clone()
     }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::FunctionLiteral
+    }
 }
 
 impl Expression for FunctionLiteral {
@@ -307,6 +336,10 @@ impl Node for CallExpression {
 
     fn token_literal(&self) -> String {
         self.token.literal.clone()
+    }
+
+    fn expression_type(&self) -> ExpressionType {
+        ExpressionType::CallExpression
     }
 }
 
