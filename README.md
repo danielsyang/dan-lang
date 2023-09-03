@@ -25,11 +25,20 @@
 - [x] ReturnStatement
 - [x] ExpressionStatement
 - [x] BlockStatement
-- [ ] Continue working on the parser.
+- [x] Continue working on the parser.
 
 #### 01 Sept 2023
 
 - Parser
 - [x] FunctionLiteral
 - [x] CallExpression
-- [ ] Clean up the parser
+- [x] Clean up the parser
+
+
+#### 03 Sept 2023
+
+- [x] Finished the parser
+- [x] Start working on the evaluator
+- [x] Eval: Integer
+- [x] Eval: Boolean
+- [ ] Eval: PrefixExpression
