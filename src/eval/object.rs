@@ -1,11 +1,11 @@
 pub type ObjectType = &'static str;
 
 const NULL_OBJ: &str = "NULL";
-const ERROR_OBJ: &str = "ERROR";
-const INTEGER_OBJ: &str = "INTEGER";
-const BOOLEAN_OBJ: &str = "BOOLEAN";
-const RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
-const FUNCTION_OBJ: &str = "FUNCTION";
+const _ERROR_OBJ: &str = "ERROR";
+pub const NUMBER_OBJ: &str = "NUMBER";
+pub const BOOLEAN_OBJ: &str = "BOOLEAN";
+const _RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
+const _FUNCTION_OBJ: &str = "FUNCTION";
 
 pub trait Object {
     fn kind(&self) -> ObjectType;
@@ -20,6 +20,11 @@ impl Number {
     pub fn new(v: i64) -> Self {
         Self { value: v }
     }
+
+    pub fn negation(v: String) -> Self {
+        let n = v.parse::<i64>().unwrap();
+        Self { value: 0 - n }
+    }
 }
 
 impl Object for Number {
@@ -28,7 +33,7 @@ impl Object for Number {
     }
 
     fn kind(&self) -> ObjectType {
-        INTEGER_OBJ
+        NUMBER_OBJ
     }
 }
 
@@ -49,6 +54,13 @@ impl Object for Boolean {
 impl Boolean {
     pub fn new(v: bool) -> Self {
         Self { value: v }
+    }
+
+    pub fn opposite(str: String) -> Self {
+        // I know that str has to be boolean, we can safely unwrap.
+        let prev = str.parse::<bool>().unwrap();
+
+        Boolean::new(!prev)
     }
 }
 

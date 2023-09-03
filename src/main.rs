@@ -7,7 +7,7 @@ mod eval;
 mod lex;
 
 fn main() {
-    println!("This is the Monkey programming language!");
+    println!("This is the Dan-Lang programming language!");
     println!("Feel free to type in commands");
 
     loop {

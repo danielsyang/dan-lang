@@ -7,8 +7,10 @@ mod test {
         let input = "
         5;
         10;
+        -10;
+        -5;
         ";
-        let result = ["5", "10"];
+        let result = ["5", "10", "-10", "-5"];
         let mut p = Parser::new(input);
         let program = p.build_ast();
 

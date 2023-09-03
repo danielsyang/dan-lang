@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node},
-    eval::object::{Boolean, Number, Object},
+    eval::object::{Boolean, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ},
     lex::token::Token,
 };
 
@@ -166,7 +166,26 @@ impl Expression for PrefixExpression {
     fn expression_node(&self) {}
 
     fn eval_expression(&self) -> Box<dyn Object> {
-        todo!("eval_expression: PrefixExpression")
+        let ob = self.right.eval_expression();
+        let op = self.operator.as_str();
+
+        match ob.kind() {
+            BOOLEAN_OBJ => {
+                if op != "!" {
+                    panic!("unsupported expression: got {}", self.operator)
+                } else {
+                    Box::new(Boolean::opposite(ob.inspect()))
+                }
+            }
+            NUMBER_OBJ => {
+                if op != "-" {
+                    panic!("unsupported expression: got {}", self.operator)
+                } else {
+                    Box::new(Number::negation(ob.inspect()))
+                }
+            }
+            k => panic!("unsupported kind: got {}", k),
+        }
     }
 }
 
