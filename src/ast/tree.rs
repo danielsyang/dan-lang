@@ -6,7 +6,7 @@ pub trait Node {
     fn token_literal(&self) -> String;
     fn string(&self) -> String;
 
-    fn eval_self(&self) -> Box<dyn Object>;
+    fn eval_node(&self) -> Box<dyn Object>;
 }
 
 pub trait Statement: Node + AToAny {

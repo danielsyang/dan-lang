@@ -32,7 +32,7 @@ impl Node for ReturnStatement {
         format!("{} {}", self.token_literal(), self.value.token_literal())
     }
 
-    fn eval_self(&self) -> Box<dyn Object> {
+    fn eval_node(&self) -> Box<dyn Object> {
         todo!("eval_self: ReturnStatement")
     }
 }
@@ -79,7 +79,7 @@ impl Node for LetStatement {
         )
     }
 
-    fn eval_self(&self) -> Box<dyn Object> {
+    fn eval_node(&self) -> Box<dyn Object> {
         todo!("eval_self: LetStatement")
     }
 }
@@ -108,7 +108,7 @@ impl Node for ExpressionStatement {
         format!("{:?}", self.expression)
     }
 
-    fn eval_self(&self) -> Box<dyn Object> {
+    fn eval_node(&self) -> Box<dyn Object> {
         // Expression::eval_self(self.expression.eval_self())
         self.expression.eval_expression()
     }
@@ -144,7 +144,7 @@ impl Node for BlockStatement {
         self.token.literal.clone()
     }
 
-    fn eval_self(&self) -> Box<dyn Object> {
+    fn eval_node(&self) -> Box<dyn Object> {
         todo!("eval_self: BlockStatement")
     }
 }
