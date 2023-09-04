@@ -2,7 +2,10 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node},
-    eval::object::{Boolean, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ},
+    eval::{
+        evaluator::eval_infix_expression,
+        object::{Boolean, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ},
+    },
     lex::token::Token,
 };
 
@@ -84,7 +87,7 @@ impl Node for InfixExpression {
     }
 
     fn eval_node(&self) -> Box<dyn Object> {
-        todo!("eval_self: InfixExpression")
+        todo!("eval_node: InfixExpression")
     }
 }
 
@@ -92,7 +95,10 @@ impl Expression for InfixExpression {
     fn expression_node(&self) {}
 
     fn eval_expression(&self) -> Box<dyn Object> {
-        todo!("eval_self: InfixExpression")
+        let left = self.left.eval_expression();
+        let right = self.right.eval_expression();
+
+        eval_infix_expression(left, right, &self.token)
     }
 }
 

@@ -41,4 +41,10 @@
 - [x] Start working on the evaluator
 - [x] Eval: Integer
 - [x] Eval: Boolean
-- [ ] Eval: PrefixExpression
+- [x] Eval: PrefixExpression
+
+#### 04 Sept 2023
+
+- [x] Eval: PrefixExpression
+- [x] Eval: InfixExpression
+- [ ] Eval: IfExpression
