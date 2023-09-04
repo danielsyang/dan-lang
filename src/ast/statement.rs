@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node, Statement},
-    eval::object::Object,
+    eval::object::{None, Object},
     lex::token::Token,
 };
 
@@ -109,7 +109,6 @@ impl Node for ExpressionStatement {
     }
 
     fn eval_node(&self) -> Box<dyn Object> {
-        // Expression::eval_self(self.expression.eval_self())
         self.expression.eval_expression()
     }
 }
@@ -145,7 +144,12 @@ impl Node for BlockStatement {
     }
 
     fn eval_node(&self) -> Box<dyn Object> {
-        todo!("eval_self: BlockStatement")
+        let mut result: Box<dyn Object> = Box::new(None::new());
+        for stmt in &self.statements {
+            result = stmt.eval_node();
+        }
+
+        result
     }
 }
 

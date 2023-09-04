@@ -4,7 +4,7 @@ use crate::{
     ast::tree::{Expression, Node},
     eval::{
         evaluator::eval_infix_expression,
-        object::{Boolean, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ},
+        object::{Boolean, None, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ},
     },
     lex::token::Token,
 };
@@ -292,7 +292,22 @@ impl Expression for IfExpression {
     fn expression_node(&self) {}
 
     fn eval_expression(&self) -> Box<dyn Object> {
-        todo!("eval_self: IfExpression")
+        let condition = self.condition.eval_expression();
+        match condition.kind() {
+            BOOLEAN_OBJ => {
+                match (
+                    condition.inspect().parse::<bool>().unwrap(),
+                    &self.alternative,
+                ) {
+                    (true, _) => self.consequence.eval_node(),
+                    (false, Some(alt)) => alt.eval_node(),
+                    _ => Box::new(None::new()),
+                }
+            }
+            _ => {
+                panic!("Invalid, should only be boolean")
+            }
+        }
     }
 }
 

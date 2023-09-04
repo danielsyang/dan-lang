@@ -104,7 +104,9 @@ mod test {
         1 + 2 == 3;
         1 + 2 == 2 + 1;
         ";
-        let result = ["true", "false", "true", "false", "false", "true", "true", "false", "true", "true"];
+        let result = [
+            "true", "false", "true", "false", "false", "true", "true", "false", "true", "true",
+        ];
         let mut p = Parser::new(input);
         let program = p.build_ast();
 
@@ -124,6 +126,24 @@ mod test {
         !!false;
         ";
         let result = ["false", "true", "true", "false"];
+        let mut p = Parser::new(input);
+        let program = p.build_ast();
+
+        for (i, node) in program.statements.iter().enumerate() {
+            let obj = node.eval_node();
+
+            assert_eq!(obj.inspect(), result.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn eval_if_else_expression() {
+        let input = "
+        if (true) { 10 };
+        if (true) { 10 } else { 20 };
+        if (false) { 10 } else { 20 }
+        ";
+        let result = ["10", "10", "20"];
         let mut p = Parser::new(input);
         let program = p.build_ast();
 

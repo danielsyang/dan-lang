@@ -4,6 +4,7 @@ const NULL_OBJ: &str = "NULL";
 const _ERROR_OBJ: &str = "ERROR";
 pub const NUMBER_OBJ: &str = "NUMBER";
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
+pub const NONE_OBJ: &str = "NONE";
 const _RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
 const _FUNCTION_OBJ: &str = "FUNCTION";
 
@@ -72,5 +73,22 @@ impl Object for Null {
     }
     fn kind(&self) -> ObjectType {
         NULL_OBJ
+    }
+}
+
+pub struct None {}
+
+impl None {
+    pub fn new() -> Self {
+        None {}
+    }
+}
+
+impl Object for None {
+    fn inspect(&self) -> String {
+        String::from("none")
+    }
+    fn kind(&self) -> ObjectType {
+        NONE_OBJ
     }
 }
