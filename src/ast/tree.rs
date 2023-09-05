@@ -1,6 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use crate::eval::object::Object;
+use crate::eval::object::{None, Object};
 
 pub trait Node {
     fn token_literal(&self) -> String;
@@ -33,6 +33,17 @@ impl Debug for dyn Expression {
 
 pub struct Program {
     pub statements: Vec<Box<dyn Statement>>,
+}
+
+impl Program {
+    pub fn eval_statements(&self) -> Box<dyn Object> {
+        let mut result: Box<dyn Object> = Box::new(None::new());
+        for stmt in self.statements.iter() {
+            result = stmt.eval_node()
+        }
+
+        result
+    }
 }
 
 pub trait AToAny: 'static {

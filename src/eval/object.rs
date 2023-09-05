@@ -5,7 +5,7 @@ const _ERROR_OBJ: &str = "ERROR";
 pub const NUMBER_OBJ: &str = "NUMBER";
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const NONE_OBJ: &str = "NONE";
-const _RETURN_VALUE_OBJ: &str = "RETURN_VALUE";
+const RETURN_OBJ: &str = "RETURN_OBJ";
 const _FUNCTION_OBJ: &str = "FUNCTION";
 
 pub trait Object {
@@ -90,5 +90,25 @@ impl Object for None {
     }
     fn kind(&self) -> ObjectType {
         NONE_OBJ
+    }
+}
+
+pub struct Return {
+    value: Box<dyn Object>,
+}
+
+impl Return {
+    pub fn new(v: Box<dyn Object>) -> Self {
+        Self { value: v }
+    }
+}
+
+impl Object for Return {
+    fn inspect(&self) -> String {
+        self.value.inspect()
+    }
+
+    fn kind(&self) -> ObjectType {
+        RETURN_OBJ
     }
 }

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node, Statement},
-    eval::object::{None, Object},
+    eval::object::{None, Object, Return},
     lex::token::Token,
 };
 
@@ -33,7 +33,8 @@ impl Node for ReturnStatement {
     }
 
     fn eval_node(&self) -> Box<dyn Object> {
-        todo!("eval_self: ReturnStatement")
+        let v = self.value.eval_expression();
+        Box::new(Return::new(v))
     }
 }
 

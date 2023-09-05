@@ -19,10 +19,8 @@ fn main() {
         let mut p = Parser::new(buffer.as_str());
         let program = p.build_ast();
 
-        for node in program.statements.iter() {
-            let obj = node.eval_node();
+        let obj = program.eval_statements();
 
-            println!("{}", obj.inspect())
-        }
+        println!("{}", obj.inspect());
     }
 }

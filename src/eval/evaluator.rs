@@ -68,89 +68,95 @@ mod test {
 
     #[test]
     fn eval_integer_expression() {
-        let input = "
-        5;
-        10;
-        -10;
-        -5;
-        5 + 5 + 5 + 5 - 10;
-        2 * 2 * 2 * 2 * 2;
-        50 / 2 * 2 + 10;
-        3 * (3 * 3) + 10;
-        (5 + 10 * 2 + 15 / 3) * 2 + -10;
-        ";
-        let result = ["5", "10", "-10", "-5", "10", "32", "60", "37", "50"];
-        let mut p = Parser::new(input);
-        let program = p.build_ast();
+        let inputs = [
+            "5;",
+            "10;",
+            "-10;",
+            "-5;",
+            "5 + 5 + 5 + 5 - 10;",
+            "2 * 2 * 2 * 2 * 2;",
+            "50 / 2 * 2 + 10;",
+            "3 * (3 * 3) + 10;",
+            "(5 + 10 * 2 + 15 / 3) * 2 + -10;",
+        ];
+        let expected = ["5", "10", "-10", "-5", "10", "32", "60", "37", "50"];
 
-        for (i, node) in program.statements.iter().enumerate() {
-            let obj = node.eval_node();
-
-            assert_eq!(obj.inspect(), result.get(i).unwrap().to_string());
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements();
+            assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }
 
     #[test]
     fn eval_boolean_expression() {
-        let input = "
-        true;
-        false;
-        1 < 2;
-        1 > 2;
-        1 == 2;
-        1 != 2;
-        true == true;
-        true != true;
-        1 + 2 == 3;
-        1 + 2 == 2 + 1;
-        ";
-        let result = [
+        let inputs = [
+            "true;",
+            "false;",
+            "1 < 2;",
+            "1 > 2;",
+            "1 == 2;",
+            "1 != 2;",
+            "true == true;",
+            "true != true;",
+            "1 + 2 == 3;",
+            "1 + 2 == 2 + 1;",
+        ];
+        let expected = [
             "true", "false", "true", "false", "false", "true", "true", "false", "true", "true",
         ];
-        let mut p = Parser::new(input);
-        let program = p.build_ast();
 
-        for (i, node) in program.statements.iter().enumerate() {
-            let obj = node.eval_node();
-
-            assert_eq!(obj.inspect(), result.get(i).unwrap().to_string());
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements();
+            assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }
 
     #[test]
     fn eval_bang_expression() {
-        let input = "
-        !true;
-        !false;
-        !!true;
-        !!false;
-        ";
-        let result = ["false", "true", "true", "false"];
-        let mut p = Parser::new(input);
-        let program = p.build_ast();
-
-        for (i, node) in program.statements.iter().enumerate() {
-            let obj = node.eval_node();
-
-            assert_eq!(obj.inspect(), result.get(i).unwrap().to_string());
+        let inputs = ["!true;", "!false;", "!!true;", "!!false;"];
+        let expected = ["false", "true", "true", "false"];
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements();
+            assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }
 
     #[test]
     fn eval_if_else_expression() {
-        let input = "
-        if (true) { 10 };
-        if (true) { 10 } else { 20 };
-        if (false) { 10 } else { 20 }
-        ";
-        let result = ["10", "10", "20"];
-        let mut p = Parser::new(input);
-        let program = p.build_ast();
-
-        for (i, node) in program.statements.iter().enumerate() {
-            let obj = node.eval_node();
-
-            assert_eq!(obj.inspect(), result.get(i).unwrap().to_string());
+        let inputs = [
+            "if (true) { 10 };",
+            "if (true) { 10 } else { 20 };",
+            "if (false) { 10 } else { 20 }",
+        ];
+        let expected = ["10", "10", "20"];
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements();
+            assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }
+
+    // #[test]
+    // fn eval_return_statement() {
+    //     let input = "
+    //     return 10;
+    //     return 2 * 5;
+    //     return 2 * 5; 9;
+    //     ";
+    //     let expected = ["10", "10", "10"];
+    //     let mut p = Parser::new(input);
+    //     let program = p.build_ast();
+    //     let result = program.eval_statements();
+
+    //     for (i, node) in result.iter().enumerate() {
+    //         assert_eq!(node.inspect(), expected.get(i).unwrap().to_string());
+    //     }
+    // }
 }
