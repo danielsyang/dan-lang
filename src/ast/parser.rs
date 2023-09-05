@@ -27,10 +27,10 @@ enum Precedence {
 }
 
 pub struct Parser {
-    pub tokens: VecDeque<Token>,
+    tokens: VecDeque<Token>,
     _errors: Vec<String>,
     current_token: Token,
-    pub next_token: Token,
+    next_token: Token,
 }
 
 impl Parser {
