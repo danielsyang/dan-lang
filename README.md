@@ -53,5 +53,5 @@
 - [x] Eval: IfExpression
 - [x] Eval: ReturnStatement
 - [ ] Eval: Error handling
-- [ ] Eval: LetStatement
-- [ ] Eval: Environment
+- [x] Eval: LetStatement
+- [x] Eval: Environment

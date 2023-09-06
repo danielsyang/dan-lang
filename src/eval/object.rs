@@ -11,6 +11,7 @@ const _FUNCTION_OBJ: &str = "FUNCTION";
 pub trait Object {
     fn kind(&self) -> ObjectType;
     fn inspect(&self) -> String;
+    fn clone_self(&self) -> Box<dyn Object>;
 }
 
 pub struct Number {
@@ -36,6 +37,10 @@ impl Object for Number {
     fn kind(&self) -> ObjectType {
         NUMBER_OBJ
     }
+
+    fn clone_self(&self) -> Box<dyn Object> {
+        Box::new(Number::new(self.value))
+    }
 }
 
 pub struct Boolean {
@@ -50,6 +55,10 @@ impl Object for Boolean {
     fn kind(&self) -> ObjectType {
         BOOLEAN_OBJ
     }
+
+    fn clone_self(&self) -> Box<dyn Object> {
+        Box::new(Boolean::new(self.value))
+    }
 }
 
 impl Boolean {
@@ -58,7 +67,6 @@ impl Boolean {
     }
 
     pub fn opposite(str: String) -> Self {
-        // I know that str has to be boolean, we can safely unwrap.
         let prev = str.parse::<bool>().unwrap();
 
         Boolean::new(!prev)
@@ -73,6 +81,10 @@ impl Object for Null {
     }
     fn kind(&self) -> ObjectType {
         NULL_OBJ
+    }
+
+    fn clone_self(&self) -> Box<dyn Object> {
+        Box::new(Null {})
     }
 }
 
@@ -90,6 +102,10 @@ impl Object for None {
     }
     fn kind(&self) -> ObjectType {
         NONE_OBJ
+    }
+
+    fn clone_self(&self) -> Box<dyn Object> {
+        Box::new(None {})
     }
 }
 
@@ -110,5 +126,9 @@ impl Object for Return {
 
     fn kind(&self) -> ObjectType {
         RETURN_OBJ
+    }
+
+    fn clone_self(&self) -> Box<dyn Object> {
+        Box::new(Return::new(self.value.clone_self()))
     }
 }

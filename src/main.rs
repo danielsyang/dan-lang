@@ -11,7 +11,7 @@ fn main() {
     println!("Feel free to type in commands");
 
     loop {
-        let env = Environment::new();
+        let mut env = Environment::new();
         print!(">> ");
         stdout().flush().unwrap();
         let mut buffer = String::new();
@@ -20,7 +20,7 @@ fn main() {
         let mut p = Parser::new(buffer.as_str());
         let program = p.build_ast();
 
-        let obj = program.eval_statements(&env);
+        let obj = program.eval_statements(&mut env);
 
         println!("{}", obj.inspect());
     }

@@ -9,7 +9,7 @@ pub trait Node {
     fn token_literal(&self) -> String;
     fn string(&self) -> String;
 
-    fn eval_node(&self, env: &Environment) -> Box<dyn Object>;
+    fn eval_node(&self, env: &mut Environment) -> Box<dyn Object>;
 }
 // TOOD: Remove downcasting
 pub trait Statement: Node + AToAny {
@@ -25,7 +25,7 @@ impl Debug for dyn Statement {
 pub trait Expression: Node {
     fn expression_node(&self);
 
-    fn eval_expression(&self, env: &Environment) -> Box<dyn Object>;
+    fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object>;
 }
 
 impl Debug for dyn Expression {
@@ -39,7 +39,7 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn eval_statements(&self, env: &Environment) -> Box<dyn Object> {
+    pub fn eval_statements(&self, env: &mut Environment) -> Box<dyn Object> {
         let mut result: Box<dyn Object> = Box::new(None::new());
         for stmt in self.statements.iter() {
             result = stmt.eval_node(env);

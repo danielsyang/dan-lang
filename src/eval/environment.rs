@@ -13,16 +13,14 @@ impl Environment {
         }
     }
 
-    pub fn get(&self, name: String) -> (Option<&dyn Object>, bool) {
+    pub fn get(&mut self, name: String) -> Option<Box<dyn Object>> {
         match self.store.get(name.as_str()) {
-            Some(val) => (Some(val.as_ref()), true),
-            None => (None, false),
+            Some(v) => Some(v.clone_self()),
+            _ => None,
         }
     }
 
-    pub fn set(&mut self, name: String, val: Box<dyn Object>) -> Box<dyn Object> {
-        self.store
-            .insert(name, val)
-            .expect("Something went wrong, can't insert into map")
+    pub fn set(&mut self, name: String, val: Box<dyn Object>) {
+        self.store.insert(name, val);
     }
 }

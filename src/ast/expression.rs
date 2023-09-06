@@ -29,7 +29,7 @@ impl BooleanLiteral {
 impl Expression for BooleanLiteral {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
         Box::new(Boolean::new(self.value))
     }
 }
@@ -43,7 +43,7 @@ impl Node for BooleanLiteral {
         self.token_literal()
     }
 
-    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_node: BooleanLiteral")
     }
 }
@@ -87,7 +87,7 @@ impl Node for InfixExpression {
         )
     }
 
-    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_node: InfixExpression")
     }
 }
@@ -95,7 +95,7 @@ impl Node for InfixExpression {
 impl Expression for InfixExpression {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, env: &Environment) -> Box<dyn Object> {
+    fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object> {
         let left = self.left.eval_expression(env);
         let right = self.right.eval_expression(env);
 
@@ -120,7 +120,7 @@ impl IntegerLiteral {
 impl Expression for IntegerLiteral {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
         Box::new(Number::new(self.value))
     }
 }
@@ -134,7 +134,7 @@ impl Node for IntegerLiteral {
         format!("{:?} {}", self.token.kind, self.token_literal())
     }
 
-    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_self: IntegerLiteral")
     }
 }
@@ -164,7 +164,7 @@ impl Node for PrefixExpression {
         self.token.literal.clone()
     }
 
-    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_node: PrefixExpression")
     }
 }
@@ -172,7 +172,7 @@ impl Node for PrefixExpression {
 impl Expression for PrefixExpression {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, env: &Environment) -> Box<dyn Object> {
+    fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object> {
         let ob = self.right.eval_expression(env);
         let op = self.operator.as_str();
 
@@ -226,7 +226,7 @@ impl Node for Identifier {
         self.value.to_string()
     }
 
-    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_self: Identifier")
     }
 }
@@ -234,8 +234,13 @@ impl Node for Identifier {
 impl Expression for Identifier {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
-        todo!("eval_self: Identifier")
+    fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object> {
+        match env.get(self.value.clone()) {
+            Some(v) => v,
+            None => {
+                panic!("identifier not found: {}", self.value)
+            }
+        }
     }
 }
 
@@ -284,7 +289,7 @@ impl Node for IfExpression {
         self.token.literal.clone()
     }
 
-    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_self: IfExpression")
     }
 }
@@ -292,7 +297,7 @@ impl Node for IfExpression {
 impl Expression for IfExpression {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, env: &Environment) -> Box<dyn Object> {
+    fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object> {
         let condition = self.condition.eval_expression(env);
         match condition.kind() {
             BOOLEAN_OBJ => {
@@ -357,7 +362,7 @@ impl Node for FunctionLiteral {
         self.token.literal.clone()
     }
 
-    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_self: FunctionLiteral")
     }
 }
@@ -365,7 +370,7 @@ impl Node for FunctionLiteral {
 impl Expression for FunctionLiteral {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_self: FunctionLiteral")
     }
 }
@@ -408,7 +413,7 @@ impl Node for CallExpression {
         self.token.literal.clone()
     }
 
-    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_self: CallExpression")
     }
 }
@@ -416,7 +421,7 @@ impl Node for CallExpression {
 impl Expression for CallExpression {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
+    fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_self: CallExpression")
     }
 }
