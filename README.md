@@ -34,7 +34,6 @@
 - [x] CallExpression
 - [x] Clean up the parser
 
-
 #### 03 Sept 2023
 
 - [x] Finished the parser
@@ -47,4 +46,10 @@
 
 - [x] Eval: PrefixExpression
 - [x] Eval: InfixExpression
-- [ ] Eval: IfExpression
+- [x] Eval: IfExpression
+
+#### 06 Sept 2023
+
+- [x] Eval: IfExpression
+- [x] Eval: ReturnStatement
+- [ ] Eval: Error handling

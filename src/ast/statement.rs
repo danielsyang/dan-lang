@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node, Statement},
-    eval::object::{None, Object, Return},
+    eval::object::{None, Object, Return, RETURN_OBJ},
     lex::token::Token,
 };
 
@@ -148,6 +148,10 @@ impl Node for BlockStatement {
         let mut result: Box<dyn Object> = Box::new(None::new());
         for stmt in &self.statements {
             result = stmt.eval_node();
+
+            if result.kind() == RETURN_OBJ {
+                break;
+            }
         }
 
         result

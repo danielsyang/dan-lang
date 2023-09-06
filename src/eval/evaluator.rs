@@ -143,20 +143,28 @@ mod test {
         }
     }
 
-    // #[test]
-    // fn eval_return_statement() {
-    //     let input = "
-    //     return 10;
-    //     return 2 * 5;
-    //     return 2 * 5; 9;
-    //     ";
-    //     let expected = ["10", "10", "10"];
-    //     let mut p = Parser::new(input);
-    //     let program = p.build_ast();
-    //     let result = program.eval_statements();
+    #[test]
+    fn eval_return_statement() {
+        let inputs = [
+            "return 10;",
+            "return 2 * 5;",
+            "return 2 * 5; 9;",
+            "
+            if (10 > 1) {
+                if (10 > 1) {
+                    return 10;
+                }
+                return 1;
+            }
+            ",
+        ];
+        let expected = ["10", "10", "10", "10"];
 
-    //     for (i, node) in result.iter().enumerate() {
-    //         assert_eq!(node.inspect(), expected.get(i).unwrap().to_string());
-    //     }
-    // }
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements();
+            assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
+        }
+    }
 }

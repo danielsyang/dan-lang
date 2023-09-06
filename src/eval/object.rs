@@ -5,7 +5,7 @@ const _ERROR_OBJ: &str = "ERROR";
 pub const NUMBER_OBJ: &str = "NUMBER";
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const NONE_OBJ: &str = "NONE";
-const RETURN_OBJ: &str = "RETURN_OBJ";
+pub const RETURN_OBJ: &str = "RETURN_OBJ";
 const _FUNCTION_OBJ: &str = "FUNCTION";
 
 pub trait Object {

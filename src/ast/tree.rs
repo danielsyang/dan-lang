@@ -1,6 +1,6 @@
 use std::{any::Any, fmt::Debug};
 
-use crate::eval::object::{None, Object};
+use crate::eval::object::{None, Object, RETURN_OBJ};
 
 pub trait Node {
     fn token_literal(&self) -> String;
@@ -8,7 +8,7 @@ pub trait Node {
 
     fn eval_node(&self) -> Box<dyn Object>;
 }
-
+// TOOD: Remove downcasting
 pub trait Statement: Node + AToAny {
     fn statement_node(&self);
 }
@@ -39,7 +39,11 @@ impl Program {
     pub fn eval_statements(&self) -> Box<dyn Object> {
         let mut result: Box<dyn Object> = Box::new(None::new());
         for stmt in self.statements.iter() {
-            result = stmt.eval_node()
+            result = stmt.eval_node();
+
+            if result.kind() == RETURN_OBJ {
+                break;
+            }
         }
 
         result
