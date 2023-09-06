@@ -64,10 +64,11 @@ pub fn eval_infix_expression(
 
 #[cfg(test)]
 mod test {
-    use crate::ast::parser::Parser;
+    use crate::{ast::parser::Parser, eval::environment::Environment};
 
     #[test]
     fn eval_integer_expression() {
+        let env = Environment::new();
         let inputs = [
             "5;",
             "10;",
@@ -84,13 +85,14 @@ mod test {
         for (i, input) in inputs.iter().enumerate() {
             let mut p = Parser::new(input);
             let program = p.build_ast();
-            let result = program.eval_statements();
+            let result = program.eval_statements(&env);
             assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }
 
     #[test]
     fn eval_boolean_expression() {
+        let env = Environment::new();
         let inputs = [
             "true;",
             "false;",
@@ -110,25 +112,27 @@ mod test {
         for (i, input) in inputs.iter().enumerate() {
             let mut p = Parser::new(input);
             let program = p.build_ast();
-            let result = program.eval_statements();
+            let result = program.eval_statements(&env);
             assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }
 
     #[test]
     fn eval_bang_expression() {
+        let env = Environment::new();
         let inputs = ["!true;", "!false;", "!!true;", "!!false;"];
         let expected = ["false", "true", "true", "false"];
         for (i, input) in inputs.iter().enumerate() {
             let mut p = Parser::new(input);
             let program = p.build_ast();
-            let result = program.eval_statements();
+            let result = program.eval_statements(&env);
             assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }
 
     #[test]
     fn eval_if_else_expression() {
+        let env = Environment::new();
         let inputs = [
             "if (true) { 10 };",
             "if (true) { 10 } else { 20 };",
@@ -138,13 +142,14 @@ mod test {
         for (i, input) in inputs.iter().enumerate() {
             let mut p = Parser::new(input);
             let program = p.build_ast();
-            let result = program.eval_statements();
+            let result = program.eval_statements(&env);
             assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }
 
     #[test]
     fn eval_return_statement() {
+        let env = Environment::new();
         let inputs = [
             "return 10;",
             "return 2 * 5;",
@@ -163,7 +168,27 @@ mod test {
         for (i, input) in inputs.iter().enumerate() {
             let mut p = Parser::new(input);
             let program = p.build_ast();
-            let result = program.eval_statements();
+            let result = program.eval_statements(&env);
+            assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn eval_let_statements() {
+        let env = Environment::new();
+        let inputs = [
+            "let a = 5; a;",
+            "let a = 5 * 5; a;",
+            "let a = 5; let b = a; b;",
+            "let a = 5; let b = a; let c = a + b + 5; c;",
+            "foobar;",
+        ];
+        let expected = ["5", "25", "5", "15", "identifier not found: foobar"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements(&env);
             assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }

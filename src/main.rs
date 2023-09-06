@@ -1,6 +1,6 @@
 use std::io::{stdin, stdout, Write};
 
-use crate::ast::parser::Parser;
+use crate::{ast::parser::Parser, eval::environment::Environment};
 
 mod ast;
 mod eval;
@@ -11,6 +11,7 @@ fn main() {
     println!("Feel free to type in commands");
 
     loop {
+        let env = Environment::new();
         print!(">> ");
         stdout().flush().unwrap();
         let mut buffer = String::new();
@@ -19,7 +20,7 @@ fn main() {
         let mut p = Parser::new(buffer.as_str());
         let program = p.build_ast();
 
-        let obj = program.eval_statements();
+        let obj = program.eval_statements(&env);
 
         println!("{}", obj.inspect());
     }

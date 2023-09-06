@@ -2,7 +2,10 @@ use std::fmt::Debug;
 
 use crate::{
     ast::tree::{Expression, Node, Statement},
-    eval::object::{None, Object, Return, RETURN_OBJ},
+    eval::{
+        environment::Environment,
+        object::{None, Object, Return, RETURN_OBJ},
+    },
     lex::token::Token,
 };
 
@@ -32,8 +35,8 @@ impl Node for ReturnStatement {
         format!("{} {}", self.token_literal(), self.value.token_literal())
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
-        let v = self.value.eval_expression();
+    fn eval_node(&self, env: &Environment) -> Box<dyn Object> {
+        let v = self.value.eval_expression(env);
         Box::new(Return::new(v))
     }
 }
@@ -80,8 +83,8 @@ impl Node for LetStatement {
         )
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
-        todo!("eval_self: LetStatement")
+    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
+        todo!("eval_node: LetStatement")
     }
 }
 
@@ -109,8 +112,8 @@ impl Node for ExpressionStatement {
         format!("{:?}", self.expression)
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
-        self.expression.eval_expression()
+    fn eval_node(&self, env: &Environment) -> Box<dyn Object> {
+        self.expression.eval_expression(env)
     }
 }
 
@@ -144,10 +147,10 @@ impl Node for BlockStatement {
         self.token.literal.clone()
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
+    fn eval_node(&self, env: &Environment) -> Box<dyn Object> {
         let mut result: Box<dyn Object> = Box::new(None::new());
         for stmt in &self.statements {
-            result = stmt.eval_node();
+            result = stmt.eval_node(env);
 
             if result.kind() == RETURN_OBJ {
                 break;

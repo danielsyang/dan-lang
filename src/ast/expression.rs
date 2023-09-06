@@ -3,6 +3,7 @@ use std::fmt::Debug;
 use crate::{
     ast::tree::{Expression, Node},
     eval::{
+        environment::Environment,
         evaluator::eval_infix_expression,
         object::{Boolean, None, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ},
     },
@@ -28,7 +29,7 @@ impl BooleanLiteral {
 impl Expression for BooleanLiteral {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self) -> Box<dyn Object> {
+    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
         Box::new(Boolean::new(self.value))
     }
 }
@@ -42,7 +43,7 @@ impl Node for BooleanLiteral {
         self.token_literal()
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_node: BooleanLiteral")
     }
 }
@@ -86,7 +87,7 @@ impl Node for InfixExpression {
         )
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_node: InfixExpression")
     }
 }
@@ -94,9 +95,9 @@ impl Node for InfixExpression {
 impl Expression for InfixExpression {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self) -> Box<dyn Object> {
-        let left = self.left.eval_expression();
-        let right = self.right.eval_expression();
+    fn eval_expression(&self, env: &Environment) -> Box<dyn Object> {
+        let left = self.left.eval_expression(env);
+        let right = self.right.eval_expression(env);
 
         eval_infix_expression(left, right, &self.token)
     }
@@ -119,7 +120,7 @@ impl IntegerLiteral {
 impl Expression for IntegerLiteral {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self) -> Box<dyn Object> {
+    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
         Box::new(Number::new(self.value))
     }
 }
@@ -133,7 +134,7 @@ impl Node for IntegerLiteral {
         format!("{:?} {}", self.token.kind, self.token_literal())
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_self: IntegerLiteral")
     }
 }
@@ -163,7 +164,7 @@ impl Node for PrefixExpression {
         self.token.literal.clone()
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_node: PrefixExpression")
     }
 }
@@ -171,8 +172,8 @@ impl Node for PrefixExpression {
 impl Expression for PrefixExpression {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self) -> Box<dyn Object> {
-        let ob = self.right.eval_expression();
+    fn eval_expression(&self, env: &Environment) -> Box<dyn Object> {
+        let ob = self.right.eval_expression(env);
         let op = self.operator.as_str();
 
         match ob.kind() {
@@ -225,7 +226,7 @@ impl Node for Identifier {
         self.value.to_string()
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_self: Identifier")
     }
 }
@@ -233,7 +234,7 @@ impl Node for Identifier {
 impl Expression for Identifier {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self) -> Box<dyn Object> {
+    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_self: Identifier")
     }
 }
@@ -283,7 +284,7 @@ impl Node for IfExpression {
         self.token.literal.clone()
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_self: IfExpression")
     }
 }
@@ -291,16 +292,16 @@ impl Node for IfExpression {
 impl Expression for IfExpression {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self) -> Box<dyn Object> {
-        let condition = self.condition.eval_expression();
+    fn eval_expression(&self, env: &Environment) -> Box<dyn Object> {
+        let condition = self.condition.eval_expression(env);
         match condition.kind() {
             BOOLEAN_OBJ => {
                 match (
                     condition.inspect().parse::<bool>().unwrap(),
                     &self.alternative,
                 ) {
-                    (true, _) => self.consequence.eval_node(),
-                    (false, Some(alt)) => alt.eval_node(),
+                    (true, _) => self.consequence.eval_node(env),
+                    (false, Some(alt)) => alt.eval_node(env),
                     _ => Box::new(None::new()),
                 }
             }
@@ -356,7 +357,7 @@ impl Node for FunctionLiteral {
         self.token.literal.clone()
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_self: FunctionLiteral")
     }
 }
@@ -364,7 +365,7 @@ impl Node for FunctionLiteral {
 impl Expression for FunctionLiteral {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self) -> Box<dyn Object> {
+    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_self: FunctionLiteral")
     }
 }
@@ -407,7 +408,7 @@ impl Node for CallExpression {
         self.token.literal.clone()
     }
 
-    fn eval_node(&self) -> Box<dyn Object> {
+    fn eval_node(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_self: CallExpression")
     }
 }
@@ -415,7 +416,7 @@ impl Node for CallExpression {
 impl Expression for CallExpression {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self) -> Box<dyn Object> {
+    fn eval_expression(&self, _env: &Environment) -> Box<dyn Object> {
         todo!("eval_self: CallExpression")
     }
 }
