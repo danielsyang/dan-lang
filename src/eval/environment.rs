@@ -23,4 +23,10 @@ impl Environment {
     pub fn set(&mut self, name: String, val: Box<dyn Object>) {
         self.store.insert(name, val);
     }
+
+    pub fn clone(&mut self) -> Self {
+        Self {
+            store: HashMap::clone(&self.store),
+        }
+    }
 }

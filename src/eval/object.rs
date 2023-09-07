@@ -1,3 +1,7 @@
+use crate::ast::{expression::Identifier, statement::BlockStatement};
+
+use super::environment::Environment;
+
 pub type ObjectType = &'static str;
 
 const NULL_OBJ: &str = "NULL";
@@ -6,12 +10,18 @@ pub const NUMBER_OBJ: &str = "NUMBER";
 pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const NONE_OBJ: &str = "NONE";
 pub const RETURN_OBJ: &str = "RETURN_OBJ";
-const _FUNCTION_OBJ: &str = "FUNCTION";
+pub const FUNCTION_OBJ: &str = "FUNCTION";
 
 pub trait Object {
     fn kind(&self) -> ObjectType;
     fn inspect(&self) -> String;
     fn clone_self(&self) -> Box<dyn Object>;
+}
+
+impl Clone for Box<dyn Object> {
+    fn clone(&self) -> Self {
+        self.clone_self()
+    }
 }
 
 pub struct Number {
@@ -130,5 +140,56 @@ impl Object for Return {
 
     fn clone_self(&self) -> Box<dyn Object> {
         Box::new(Return::new(self.value.clone_self()))
+    }
+}
+
+pub struct Function {
+    name: Identifier,
+    parameters: Vec<Identifier>,
+    body: BlockStatement,
+    _env: Environment,
+}
+
+impl Function {
+    pub fn new(
+        name: Identifier,
+        parameters: Vec<Identifier>,
+        body: BlockStatement,
+        env: &mut Environment,
+    ) -> Self {
+        let new_env = env.clone();
+
+        Self {
+            name,
+            parameters,
+            body,
+            _env: new_env,
+        }
+    }
+}
+
+impl Object for Function {
+    fn clone_self(&self) -> Box<dyn Object> {
+        todo!("implement clone for object function")
+    }
+
+    fn inspect(&self) -> String {
+        let params = self
+            .parameters
+            .iter()
+            .map(|param| param.value.clone())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        format!(
+            "fn {} ( {} ) {{ {} }}",
+            self.name.value,
+            params,
+            self.body.string_hack()
+        )
+    }
+
+    fn kind(&self) -> ObjectType {
+        FUNCTION_OBJ
     }
 }

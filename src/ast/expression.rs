@@ -5,7 +5,7 @@ use crate::{
     eval::{
         environment::Environment,
         evaluator::eval_infix_expression,
-        object::{Boolean, None, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ},
+        object::{Boolean, Function, None, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ},
     },
     lex::token::Token,
 };
@@ -31,6 +31,10 @@ impl Expression for BooleanLiteral {
 
     fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
         Box::new(Boolean::new(self.value))
+    }
+
+    fn clone_expression(&self) -> Box<dyn Expression> {
+        Box::new(BooleanLiteral::new(&self.token, self.value))
     }
 }
 
@@ -101,6 +105,14 @@ impl Expression for InfixExpression {
 
         eval_infix_expression(left, right, &self.token)
     }
+
+    fn clone_expression(&self) -> Box<dyn Expression> {
+        Box::new(InfixExpression::new(
+            &self.token,
+            self.left.clone_expression(),
+            self.right.clone_expression(),
+        ))
+    }
 }
 
 pub struct IntegerLiteral {
@@ -122,6 +134,10 @@ impl Expression for IntegerLiteral {
 
     fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
         Box::new(Number::new(self.value))
+    }
+
+    fn clone_expression(&self) -> Box<dyn Expression> {
+        Box::new(IntegerLiteral::new(&self.token, self.value))
     }
 }
 
@@ -194,6 +210,13 @@ impl Expression for PrefixExpression {
             k => panic!("unsupported kind: got {}", k),
         }
     }
+
+    fn clone_expression(&self) -> Box<dyn Expression> {
+        Box::new(PrefixExpression::new(
+            &self.token,
+            self.right.clone_expression(),
+        ))
+    }
 }
 
 impl Debug for PrefixExpression {
@@ -202,10 +225,10 @@ impl Debug for PrefixExpression {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Identifier {
     pub token: Token,
-    value: String,
+    pub value: String,
 }
 
 impl Identifier {
@@ -241,6 +264,10 @@ impl Expression for Identifier {
                 panic!("identifier not found: {}", self.value)
             }
         }
+    }
+
+    fn clone_expression(&self) -> Box<dyn Expression> {
+        Box::new(Identifier::new(&self.token))
     }
 }
 
@@ -315,6 +342,23 @@ impl Expression for IfExpression {
             }
         }
     }
+
+    fn clone_expression(&self) -> Box<dyn Expression> {
+        match &self.alternative {
+            Some(alt) => Box::new(IfExpression::new(
+                self.token.clone(),
+                self.condition.clone_expression(),
+                self.consequence.clone_block_statement(),
+                Some(alt.clone_block_statement()),
+            )),
+            None => Box::new(IfExpression::new(
+                self.token.clone(),
+                self.condition.clone_expression(),
+                self.consequence.clone_block_statement(),
+                None,
+            )),
+        }
+    }
 }
 
 pub struct FunctionLiteral {
@@ -370,8 +414,24 @@ impl Node for FunctionLiteral {
 impl Expression for FunctionLiteral {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
-        todo!("eval_self: FunctionLiteral")
+    fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object> {
+        Box::new(Function::new(
+            self.identifier.clone(),
+            self.parameters.clone(),
+            self.body.clone_block_statement(),
+            env,
+        ))
+    }
+
+    fn clone_expression(&self) -> Box<dyn Expression> {
+        let params_cloned = self.parameters.to_vec().clone();
+
+        Box::new(FunctionLiteral::new(
+            self.token.clone(),
+            self.identifier.clone(),
+            params_cloned,
+            self.body.clone_block_statement(),
+        ))
     }
 }
 
@@ -423,5 +483,19 @@ impl Expression for CallExpression {
 
     fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
         todo!("eval_self: CallExpression")
+    }
+
+    fn clone_expression(&self) -> Box<dyn Expression> {
+        let cloned_args = self
+            .arguments
+            .iter()
+            .map(|args| args.clone_expression())
+            .collect::<Vec<_>>();
+
+        Box::new(CallExpression::new(
+            self.token.clone(),
+            self.function.clone_expression(),
+            cloned_args,
+        ))
     }
 }

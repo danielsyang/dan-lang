@@ -9,9 +9,9 @@ mod lex;
 fn main() {
     println!("This is the Dan-Lang programming language!");
     println!("Feel free to type in commands");
+    let mut env = Environment::new();
 
     loop {
-        let mut env = Environment::new();
         print!(">> ");
         stdout().flush().unwrap();
         let mut buffer = String::new();

@@ -193,4 +193,18 @@ mod test {
             assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
         }
     }
+
+    #[test]
+    fn eval_function_block() {
+        let mut env = Environment::new();
+        let inputs = ["fn abc(x) { x + 2; };"];
+        let expected = ["5"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
+        }
+    }
 }

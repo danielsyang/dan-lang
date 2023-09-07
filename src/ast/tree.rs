@@ -14,6 +14,8 @@ pub trait Node {
 // TOOD: Remove downcasting
 pub trait Statement: Node + AToAny {
     fn statement_node(&self);
+
+    fn clone_statement(&self) -> Box<dyn Statement>;
 }
 
 impl Debug for dyn Statement {
@@ -26,6 +28,8 @@ pub trait Expression: Node {
     fn expression_node(&self);
 
     fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object>;
+
+    fn clone_expression(&self) -> Box<dyn Expression>;
 }
 
 impl Debug for dyn Expression {

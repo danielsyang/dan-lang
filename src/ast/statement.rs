@@ -24,6 +24,13 @@ impl ReturnStatement {
 
 impl Statement for ReturnStatement {
     fn statement_node(&self) {}
+
+    fn clone_statement(&self) -> Box<dyn Statement> {
+        Box::new(ReturnStatement::new(
+            self.token.clone(),
+            self.value.clone_expression(),
+        ))
+    }
 }
 
 impl Node for ReturnStatement {
@@ -67,6 +74,14 @@ impl Debug for LetStatement {
 
 impl Statement for LetStatement {
     fn statement_node(&self) {}
+
+    fn clone_statement(&self) -> Box<dyn Statement> {
+        Box::new(LetStatement::new(
+            self.token.clone(),
+            self.name.clone(),
+            self.value.clone_expression(),
+        ))
+    }
 }
 
 impl Node for LetStatement {
@@ -105,6 +120,13 @@ impl ExpressionStatement {
 
 impl Statement for ExpressionStatement {
     fn statement_node(&self) {}
+
+    fn clone_statement(&self) -> Box<dyn Statement> {
+        Box::new(ExpressionStatement::new(
+            self.token.clone(),
+            self.expression.clone_expression(),
+        ))
+    }
 }
 
 impl Node for ExpressionStatement {
@@ -135,6 +157,19 @@ pub struct BlockStatement {
 impl BlockStatement {
     pub fn new(token: Token, statements: Vec<Box<dyn Statement>>) -> Self {
         Self { token, statements }
+    }
+
+    pub fn clone_block_statement(&self) -> BlockStatement {
+        let sttm_cloned = self
+            .statements
+            .iter()
+            .map(|sttm| sttm.clone_statement())
+            .collect::<Vec<_>>();
+        BlockStatement::new(self.token.clone(), sttm_cloned)
+    }
+
+    pub fn string_hack(&self) -> String {
+        self.string()
     }
 }
 
@@ -167,6 +202,16 @@ impl Node for BlockStatement {
 
 impl Statement for BlockStatement {
     fn statement_node(&self) {}
+
+    fn clone_statement(&self) -> Box<dyn Statement> {
+        let sttm_clone = self
+            .statements
+            .iter()
+            .map(|sttm| sttm.clone_statement())
+            .collect::<Vec<_>>();
+
+        Box::new(BlockStatement::new(self.token.clone(), sttm_clone))
+    }
 }
 
 impl Debug for BlockStatement {
