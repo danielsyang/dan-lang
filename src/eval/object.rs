@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::ast::{expression::Identifier, statement::BlockStatement};
 
 use super::environment::Environment;
@@ -147,7 +149,7 @@ pub struct Function {
     name: Identifier,
     parameters: Vec<Identifier>,
     body: BlockStatement,
-    _env: Environment,
+    env: Environment,
 }
 
 impl Function {
@@ -163,14 +165,23 @@ impl Function {
             name,
             parameters,
             body,
-            _env: new_env,
+            env: new_env,
         }
     }
 }
 
 impl Object for Function {
     fn clone_self(&self) -> Box<dyn Object> {
-        todo!("implement clone for object function")
+        let params_cloned = self.parameters.to_vec().clone();
+        let cloned_env = HashMap::clone(&self.env.store);
+        let mut new_env = Environment::new_from(cloned_env);
+
+        Box::new(Function::new(
+            self.name.clone(),
+            params_cloned,
+            self.body.clone_block_statement(),
+            &mut new_env,
+        ))
     }
 
     fn inspect(&self) -> String {

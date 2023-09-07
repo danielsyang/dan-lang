@@ -481,8 +481,15 @@ impl Node for CallExpression {
 impl Expression for CallExpression {
     fn expression_node(&self) {}
 
-    fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
-        todo!("eval_self: CallExpression")
+    fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object> {
+        let function_eval = self.function.eval_expression(env);
+        let args_eval = self
+            .arguments
+            .iter()
+            .map(|arg| arg.eval_expression(env))
+            .collect::<Vec<_>>();
+
+        todo!("Evaluate.");
     }
 
     fn clone_expression(&self) -> Box<dyn Expression> {
