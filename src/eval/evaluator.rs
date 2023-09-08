@@ -12,11 +12,11 @@ pub fn eval_infix_expression(
             let ln = left
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid left operator. Got {}", left.kind()));
             let rn = right
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid right operator. Got {}", right.kind()));
 
             Box::new(Number::new(ln + rn))
         }
@@ -24,33 +24,33 @@ pub fn eval_infix_expression(
             let ln = left
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid left operator. Got {}", left.kind()));
             let rn = right
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid right operator. Got {}", right.kind()));
             Box::new(Number::new(ln - rn))
         }
         (_, _, TokenType::MultiplicationSign) => {
             let ln = left
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid left operator. Got {}", left.kind()));
             let rn = right
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid right operator. Got {}", right.kind()));
             Box::new(Number::new(ln * rn))
         }
         (_, _, TokenType::SlashSign) => {
             let ln = left
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid left operator. Got {}", left.kind()));
             let rn = right
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid right operator. Got {}", right.kind()));
             Box::new(Number::new(ln / rn))
         }
         (_, _, TokenType::Eq) => Box::new(Boolean::new(left.inspect() == right.inspect())),
@@ -59,22 +59,22 @@ pub fn eval_infix_expression(
             let ln = left
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid left operator. Got {}", left.kind()));
             let rn = right
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid right operator. Got {}", right.kind()));
             Box::new(Boolean::new(ln > rn))
         }
         (_, _, TokenType::LT) => {
             let ln = left
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid left operator. Got {}", left.kind()));
             let rn = right
                 .inspect()
                 .parse::<i64>()
-                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
+                .unwrap_or_else(|_| panic!("Invalid right operator. Got {}", right.kind()));
             Box::new(Boolean::new(ln < rn))
         }
         (_, _, _) => panic!(

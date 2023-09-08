@@ -501,7 +501,7 @@ impl Expression for CallExpression {
         for (idx, param) in function_eval.parameters.iter().enumerate() {
             let arg = args_eval
                 .get(idx)
-                .expect(format!("Missing parameter: {}", idx).as_str())
+                .unwrap_or_else(|| panic!("Missing parameter: {}", idx))
                 .clone();
 
             env.set(param.value.clone(), arg);
