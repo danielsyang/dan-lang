@@ -60,3 +60,7 @@
 
 - [x] Eval: FunctionLiteral
 - [x] Eval: CallExpression
+
+#### 08 Sept 2023
+
+- [x] Token + Parse + Eval: Strings
