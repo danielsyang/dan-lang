@@ -6,6 +6,12 @@ pub struct Environment {
     pub store: HashMap<String, Box<dyn Object>>,
 }
 
+impl Default for Environment {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Environment {
     pub fn new() -> Self {
         Self {

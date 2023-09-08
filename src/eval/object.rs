@@ -18,6 +18,9 @@ pub trait Object {
     fn kind(&self) -> ObjectType;
     fn inspect(&self) -> String;
     fn clone_self(&self) -> Box<dyn Object>;
+
+    // I really don't know what better way to get struct without downcasting
+    fn extreme_hack_for_function(&self) -> Function;
 }
 
 impl Clone for Box<dyn Object> {
@@ -53,6 +56,10 @@ impl Object for Number {
     fn clone_self(&self) -> Box<dyn Object> {
         Box::new(Number::new(self.value))
     }
+
+    fn extreme_hack_for_function(&self) -> Function {
+        unreachable!("Should have never happened.")
+    }
 }
 
 pub struct Boolean {
@@ -70,6 +77,10 @@ impl Object for Boolean {
 
     fn clone_self(&self) -> Box<dyn Object> {
         Box::new(Boolean::new(self.value))
+    }
+
+    fn extreme_hack_for_function(&self) -> Function {
+        unreachable!("Should have never happened.")
     }
 }
 
@@ -98,6 +109,10 @@ impl Object for Null {
     fn clone_self(&self) -> Box<dyn Object> {
         Box::new(Null {})
     }
+
+    fn extreme_hack_for_function(&self) -> Function {
+        unreachable!("Should have never happened.")
+    }
 }
 
 pub struct None {}
@@ -118,6 +133,10 @@ impl Object for None {
 
     fn clone_self(&self) -> Box<dyn Object> {
         Box::new(None {})
+    }
+
+    fn extreme_hack_for_function(&self) -> Function {
+        unreachable!("Should have never happened.")
     }
 }
 
@@ -143,12 +162,16 @@ impl Object for Return {
     fn clone_self(&self) -> Box<dyn Object> {
         Box::new(Return::new(self.value.clone_self()))
     }
+
+    fn extreme_hack_for_function(&self) -> Function {
+        unreachable!("Should have never happened.")
+    }
 }
 
 pub struct Function {
     name: Identifier,
-    parameters: Vec<Identifier>,
-    body: BlockStatement,
+    pub parameters: Vec<Identifier>,
+    pub body: BlockStatement,
     env: Environment,
 }
 
@@ -202,5 +225,18 @@ impl Object for Function {
 
     fn kind(&self) -> ObjectType {
         FUNCTION_OBJ
+    }
+
+    fn extreme_hack_for_function(&self) -> Function {
+        let params_cloned = self.parameters.to_vec().clone();
+        let cloned_env = HashMap::clone(&self.env.store);
+        let mut new_env = Environment::new_from(cloned_env);
+
+        Function::new(
+            self.name.clone(),
+            params_cloned,
+            self.body.clone_block_statement(),
+            &mut new_env,
+        )
     }
 }

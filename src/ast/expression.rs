@@ -415,12 +415,18 @@ impl Expression for FunctionLiteral {
     fn expression_node(&self) {}
 
     fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object> {
-        Box::new(Function::new(
+        let func = Box::new(Function::new(
             self.identifier.clone(),
             self.parameters.clone(),
             self.body.clone_block_statement(),
             env,
-        ))
+        ));
+
+        let cloned_func = func.clone_self();
+
+        env.set(self.identifier.value.clone(), cloned_func);
+
+        func
     }
 
     fn clone_expression(&self) -> Box<dyn Expression> {
@@ -482,14 +488,26 @@ impl Expression for CallExpression {
     fn expression_node(&self) {}
 
     fn eval_expression(&self, env: &mut Environment) -> Box<dyn Object> {
-        let function_eval = self.function.eval_expression(env);
+        let function_eval: Function = self
+            .function
+            .eval_expression(env)
+            .extreme_hack_for_function();
         let args_eval = self
             .arguments
             .iter()
             .map(|arg| arg.eval_expression(env))
             .collect::<Vec<_>>();
 
-        todo!("Evaluate.");
+        for (idx, param) in function_eval.parameters.iter().enumerate() {
+            let arg = args_eval
+                .get(idx)
+                .expect(format!("Missing parameter: {}", idx).as_str())
+                .clone();
+
+            env.set(param.value.clone(), arg);
+        }
+
+        function_eval.body.eval_node(env)
     }
 
     fn clone_expression(&self) -> Box<dyn Expression> {

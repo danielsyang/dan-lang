@@ -55,3 +55,7 @@
 - [ ] Eval: Error handling
 - [x] Eval: LetStatement
 - [x] Eval: Environment
+
+#### 08 Sept 2023
+
+- [x] Eval: FunctionLiteral

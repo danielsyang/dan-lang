@@ -1,6 +1,6 @@
 use crate::lex::token::{Token, TokenType};
 
-use super::object::{Boolean, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ};
+use super::object::{Boolean, Number, Object};
 
 pub fn eval_infix_expression(
     left: Box<dyn Object>,
@@ -8,57 +8,81 @@ pub fn eval_infix_expression(
     operator: &Token,
 ) -> Box<dyn Object> {
     match (left.kind(), right.kind(), operator.kind) {
-        (NUMBER_OBJ, NUMBER_OBJ, TokenType::PlusSign) => {
-            let ln = left.inspect().parse::<i64>().unwrap();
-            let rn = right.inspect().parse::<i64>().unwrap();
+        (_, _, TokenType::PlusSign) => {
+            let ln = left
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+            let rn = right
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
+
             Box::new(Number::new(ln + rn))
         }
-        (NUMBER_OBJ, NUMBER_OBJ, TokenType::MinusSign) => {
-            let ln = left.inspect().parse::<i64>().unwrap();
-            let rn = right.inspect().parse::<i64>().unwrap();
+        (_, _, TokenType::MinusSign) => {
+            let ln = left
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+            let rn = right
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
             Box::new(Number::new(ln - rn))
         }
-        (NUMBER_OBJ, NUMBER_OBJ, TokenType::MultiplicationSign) => {
-            let ln = left.inspect().parse::<i64>().unwrap();
-            let rn = right.inspect().parse::<i64>().unwrap();
+        (_, _, TokenType::MultiplicationSign) => {
+            let ln = left
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+            let rn = right
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
             Box::new(Number::new(ln * rn))
         }
-        (NUMBER_OBJ, NUMBER_OBJ, TokenType::SlashSign) => {
-            let ln = left.inspect().parse::<i64>().unwrap();
-            let rn = right.inspect().parse::<i64>().unwrap();
+        (_, _, TokenType::SlashSign) => {
+            let ln = left
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+            let rn = right
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
             Box::new(Number::new(ln / rn))
         }
-        (NUMBER_OBJ, NUMBER_OBJ, TokenType::Eq) => {
-            let ln = left.inspect().parse::<i64>().unwrap();
-            let rn = right.inspect().parse::<i64>().unwrap();
-            Box::new(Boolean::new(ln == rn))
-        }
-        (NUMBER_OBJ, NUMBER_OBJ, TokenType::NotEq) => {
-            let ln = left.inspect().parse::<i64>().unwrap();
-            let rn = right.inspect().parse::<i64>().unwrap();
-            Box::new(Boolean::new(ln != rn))
-        }
-        (NUMBER_OBJ, NUMBER_OBJ, TokenType::GT) => {
-            let ln = left.inspect().parse::<i64>().unwrap();
-            let rn = right.inspect().parse::<i64>().unwrap();
+        (_, _, TokenType::Eq) => Box::new(Boolean::new(left.inspect() == right.inspect())),
+        (_, _, TokenType::NotEq) => Box::new(Boolean::new(left.inspect() != right.inspect())),
+        (_, _, TokenType::GT) => {
+            let ln = left
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+            let rn = right
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
             Box::new(Boolean::new(ln > rn))
         }
-        (NUMBER_OBJ, NUMBER_OBJ, TokenType::LT) => {
-            let ln = left.inspect().parse::<i64>().unwrap();
-            let rn = right.inspect().parse::<i64>().unwrap();
+        (_, _, TokenType::LT) => {
+            let ln = left
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid left operator. Got {}", left.kind()).as_str());
+            let rn = right
+                .inspect()
+                .parse::<i64>()
+                .expect(format!("Invalid right operator. Got {}", right.kind()).as_str());
             Box::new(Boolean::new(ln < rn))
         }
-        (BOOLEAN_OBJ, BOOLEAN_OBJ, TokenType::Eq) => {
-            let ln = left.inspect().parse::<bool>().unwrap();
-            let rn = right.inspect().parse::<bool>().unwrap();
-            Box::new(Boolean::new(ln == rn))
-        }
-        (BOOLEAN_OBJ, BOOLEAN_OBJ, TokenType::NotEq) => {
-            let ln = left.inspect().parse::<bool>().unwrap();
-            let rn = right.inspect().parse::<bool>().unwrap();
-            Box::new(Boolean::new(ln != rn))
-        }
-        (_, _, _) => panic!("eval_infix_expression: operation not yet implemented"),
+        (_, _, _) => panic!(
+            "eval_infix_expression: operation not yet implemented: left {}; right {}; op {:?}",
+            left.kind(),
+            right.kind(),
+            operator.kind
+        ),
     }
 }
 
@@ -211,8 +235,25 @@ mod test {
     #[test]
     fn eval_function_application() {
         let mut env = Environment::new();
-        let inputs = ["fn abc(x) { x * x; }; abc(5);"];
-        let expected = ["25"];
+        let inputs = [
+            "fn abc(x) { return x * x; }; abc(5);",
+            "fn add(x, y) { return x + y; }; add(5 + 5, add(5, 5));",
+        ];
+        let expected = ["25", "20"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.inspect(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn eval_function_closures() {
+        let mut env = Environment::new();
+        let inputs = ["fn abc(x) { fn inner(y) { x + y; }; }; let first = abc(2); first(2)"];
+        let expected = ["4"];
 
         for (i, input) in inputs.iter().enumerate() {
             let mut p = Parser::new(input);
