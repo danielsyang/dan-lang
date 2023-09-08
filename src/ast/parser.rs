@@ -9,7 +9,10 @@ use crate::{
 };
 
 use super::{
-    expression::{BooleanLiteral, Identifier, InfixExpression, IntegerLiteral, PrefixExpression},
+    expression::{
+        BooleanLiteral, Identifier, InfixExpression, IntegerLiteral, PrefixExpression,
+        StringLiteral,
+    },
     statement::{BlockStatement, ExpressionStatement, LetStatement, ReturnStatement},
     tree::{Expression, Program, Statement},
 };
@@ -358,8 +361,8 @@ impl Parser {
     }
 
     fn parse_expression(&mut self, p: Precedence) -> Box<dyn Expression> {
-        let mut left_exp: Box<dyn Expression> = match self.current_token.kind {
-            TokenType::Int(v) => Box::new(IntegerLiteral::new(&self.current_token, v)),
+        let mut left_exp: Box<dyn Expression> = match &self.current_token.kind {
+            TokenType::Int(v) => Box::new(IntegerLiteral::new(&self.current_token, *v)),
             TokenType::Identifier => Box::new(Identifier::new(&self.current_token)),
             TokenType::True => Box::new(BooleanLiteral::new(&self.current_token, true)),
             TokenType::False => Box::new(BooleanLiteral::new(&self.current_token, false)),
@@ -368,6 +371,7 @@ impl Parser {
             TokenType::LeftParen => self.parse_grouped_expression(),
             TokenType::If => self.parse_if_expression(),
             TokenType::Function => self.parse_function_literal(),
+            TokenType::String(s) => Box::new(StringLiteral::new(&self.current_token, s.clone())),
             _ => panic!(
                 "parse_expression: not yet implemented, got {:?}",
                 self.current_token.kind
@@ -466,8 +470,15 @@ mod test {
         let y = 100;
         let foobar = y;
         let barfoo = false;
+        let myString = \"My string\";
         ";
-        let expected = ["let x 5", "let y 100", "let foobar y", "let barfoo false"];
+        let expected = [
+            "let x 5",
+            "let y 100",
+            "let foobar y",
+            "let barfoo false",
+            "let myString My string",
+        ];
 
         let mut p = Parser::new(input);
 
@@ -695,6 +706,21 @@ mod test {
             "add ( Int(1) 1, (Int(2) 2 * Int(3) 3), (Int(4) 4 + Int(5) 5) )",
             "multiply ( Int(1) 1, Int(2) 2 )",
         ];
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_string_expression() {
+        let input = "
+        \"Hello world\";
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = ["String(\"Hello world\") Hello world"];
         let result = p.build_ast();
 
         for (i, curr) in result.statements.iter().enumerate() {

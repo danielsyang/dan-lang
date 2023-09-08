@@ -7,7 +7,7 @@ pub fn eval_infix_expression(
     right: Box<dyn Object>,
     operator: &Token,
 ) -> Box<dyn Object> {
-    match (left.kind(), right.kind(), operator.kind) {
+    match (left.kind(), right.kind(), operator.kind.clone()) {
         (_, _, TokenType::PlusSign) => {
             let ln = left
                 .inspect()

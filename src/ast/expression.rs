@@ -5,7 +5,7 @@ use crate::{
     eval::{
         environment::Environment,
         evaluator::eval_infix_expression,
-        object::{Boolean, Function, None, Number, Object, BOOLEAN_OBJ, NUMBER_OBJ},
+        object::{Boolean, Function, None, Number, Object, StringObj, BOOLEAN_OBJ, NUMBER_OBJ},
     },
     lex::token::Token,
 };
@@ -522,5 +522,45 @@ impl Expression for CallExpression {
             self.function.clone_expression(),
             cloned_args,
         ))
+    }
+}
+
+pub struct StringLiteral {
+    token: Token,
+    pub value: String,
+}
+
+impl StringLiteral {
+    pub fn new(token: &Token, value: String) -> Self {
+        Self {
+            token: token.clone(),
+            value,
+        }
+    }
+}
+
+impl Expression for StringLiteral {
+    fn expression_node(&self) {}
+
+    fn eval_expression(&self, _env: &mut Environment) -> Box<dyn Object> {
+        Box::new(StringObj::new(self.value.clone()))
+    }
+
+    fn clone_expression(&self) -> Box<dyn Expression> {
+        Box::new(StringLiteral::new(&self.token, self.value.clone()))
+    }
+}
+
+impl Node for StringLiteral {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+
+    fn string(&self) -> String {
+        format!("{:?} {}", self.token.kind, self.value)
+    }
+
+    fn eval_node(&self, _env: &mut Environment) -> Box<dyn Object> {
+        todo!("eval_self: IntegerLiteral")
     }
 }

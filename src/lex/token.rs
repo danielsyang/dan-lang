@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-#[derive(Debug, PartialEq, Clone, Copy, Eq, Hash)]
+#[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub enum TokenType {
     Comma,
     Semicolon,
@@ -12,6 +12,7 @@ pub enum TokenType {
     RightParen,
     LeftBrace,
     RightBrace,
+    String(String),
 
     // keywords
     Let,
@@ -157,6 +158,13 @@ impl Token {
         Self {
             kind: TokenType::Identifier,
             literal: name,
+        }
+    }
+
+    pub fn string(string: String) -> Self {
+        Self {
+            kind: TokenType::String(string.clone()),
+            literal: string,
         }
     }
 }

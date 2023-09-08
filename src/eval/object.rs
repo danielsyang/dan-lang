@@ -13,6 +13,7 @@ pub const BOOLEAN_OBJ: &str = "BOOLEAN";
 pub const NONE_OBJ: &str = "NONE";
 pub const RETURN_OBJ: &str = "RETURN_OBJ";
 pub const FUNCTION_OBJ: &str = "FUNCTION";
+pub const STRING_OBJ: &str = "STRING_OBJ";
 
 pub trait Object {
     fn kind(&self) -> ObjectType;
@@ -238,5 +239,33 @@ impl Object for Function {
             self.body.clone_block_statement(),
             &mut new_env,
         )
+    }
+}
+
+pub struct StringObj {
+    value: String,
+}
+
+impl StringObj {
+    pub fn new(v: String) -> Self {
+        Self { value: v }
+    }
+}
+
+impl Object for StringObj {
+    fn clone_self(&self) -> Box<dyn Object> {
+        Box::new(StringObj::new(self.value.clone()))
+    }
+
+    fn extreme_hack_for_function(&self) -> Function {
+        unreachable!("Should have never happened")
+    }
+
+    fn inspect(&self) -> String {
+        self.value.clone()
+    }
+
+    fn kind(&self) -> ObjectType {
+        STRING_OBJ
     }
 }

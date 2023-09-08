@@ -85,6 +85,7 @@ impl Lexer {
             ',' => Some(Token::comma()),
             '<' => Some(Token::lt()),
             '>' => Some(Token::gt()),
+            '"' => Some(Token::string(self.consume_string())),
             _ => panic!("token: {:?} has not been implemented yet.", curr),
         }
     }
@@ -126,6 +127,23 @@ impl Lexer {
         }
 
         word
+    }
+
+    fn consume_string(&mut self) -> String {
+        let mut curr = self.consume_char();
+        let mut string = String::from("");
+
+        loop {
+            match curr {
+                '"' => break,
+                _ => {
+                    string.push(curr);
+                    curr = self.consume_char();
+                }
+            }
+        }
+
+        string
     }
 
     fn consume_number(&mut self, mut initial_char: char) -> i64 {
@@ -286,6 +304,32 @@ mod test {
             Token::right_paren(),
             Token::left_brace(),
             Token::right_brace(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn tokenize_strings() {
+        let input = "
+            let abc = \"HELLO\";
+            let cde = \"Hello world\";
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::new_let(),
+            Token::identifier("abc".to_string()),
+            Token::assign_sign(),
+            Token::string("HELLO".to_string()),
+            Token::semicolon(),
+            Token::new_let(),
+            Token::identifier("cde".to_string()),
+            Token::assign_sign(),
+            Token::string("Hello world".to_string()),
+            Token::semicolon(),
             Token::eof(),
         ];
         let result = run_tokenizer(lex);
