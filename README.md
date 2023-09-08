@@ -59,3 +59,4 @@
 #### 08 Sept 2023
 
 - [x] Eval: FunctionLiteral
+- [x] Eval: CallExpression
