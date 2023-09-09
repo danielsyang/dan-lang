@@ -53,19 +53,11 @@ impl Parser {
     }
 
     fn consume_token(&mut self) {
-        println!(
-            "moved current {:?} to {:?}",
-            self.current_token.kind, self.next_token.kind
-        );
         self.current_token = self.next_token.clone();
         self.next_token = self
             .tokens
             .pop_front()
             .expect("Invalid state, there are no more tokens to consume.");
-        println!(
-            "moved next {:?} to {:?}",
-            self.current_token.kind, self.next_token.kind
-        );
     }
 
     fn expect_next_token(&mut self, kind: TokenType) -> bool {
@@ -358,8 +350,8 @@ impl Parser {
         }
     }
 
-    fn parse_call_arguments(&mut self) -> Vec<Box<Expression>> {
-        let mut args: Vec<Box<Expression>> = vec![];
+    fn parse_call_arguments(&mut self) -> Vec<Expression> {
+        let mut args: Vec<Expression> = vec![];
 
         if self.next_token.kind == TokenType::RightParen {
             self.consume_token();
@@ -367,12 +359,12 @@ impl Parser {
         }
 
         self.consume_token();
-        args.push(Box::new(self.parse_expression(Precedence::Lowest)));
+        args.push(self.parse_expression(Precedence::Lowest));
 
         while self.next_token.kind == TokenType::Comma {
             self.consume_token();
             self.consume_token();
-            args.push(Box::new(self.parse_expression(Precedence::Lowest)));
+            args.push(self.parse_expression(Precedence::Lowest));
         }
 
         if !self.expect_next_token(TokenType::RightParen) {
@@ -481,12 +473,12 @@ mod test {
 
         let mut p = Parser::new(input);
         let expected = [
-            "! Exp Number (5)",
-            "- Exp Number (15)",
-            "! Exp Ident (foobar)",
-            "- Exp Ident (foobar)",
-            "! Exp Bool (true)",
-            "! Exp Bool (false)",
+            "! Number (5)",
+            "- Number (15)",
+            "! Ident (foobar)",
+            "- Ident (foobar)",
+            "! Bool (true)",
+            "! Bool (false)",
             "Number (5)",
         ];
 
@@ -535,7 +527,7 @@ mod test {
             "== Left Bool (true) , Right Bool (true)",
             "!= Left Bool (false) , Right Bool (true)",
             "+ Left Number (5) , Right * Left Number (5) , Right Number (5)",
-            "+ Left - Exp Number (1) , Right Number (2)",
+            "+ Left - Number (1) , Right Number (2)",
             "- Left + Left + Left Ident (a) , Right * Left Ident (b) , Right Ident (c) , Right / Left Ident (d) , Right Ident (e) , Right Ident (f)",
             "== Left > Left Number (3) , Right Number (5) , Right Bool (false)",
         ];
@@ -561,7 +553,7 @@ mod test {
             "+ Left + Left Number (1) , Right + Left Number (2) , Right Number (3) , Right Number (4)",
             "* Left + Left Number (5) , Right Number (5) , Right Number (2)",
             "/ Left Number (2) , Right + Left Number (5) , Right Number (5)",
-            "- Exp + Left Number (5) , Right Number (5)",
+            "- + Left Number (5) , Right Number (5)",
         ];
 
         let result = p.build_ast();

@@ -17,12 +17,12 @@ pub enum Statement {
 impl Display for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Statement::Let(identifier, exp) => write!(f, "Let {} {}", identifier, exp.to_string()),
+            Statement::Let(identifier, exp) => write!(f, "Let {} {}", identifier, exp),
             Statement::Return(exp) => {
-                write!(f, "Return {}", exp.to_string())
+                write!(f, "Return {}", exp)
             }
             Statement::Expression(exp) => {
-                write!(f, "{}", exp.to_string())
+                write!(f, "{}", exp)
             }
         }
     }
@@ -46,7 +46,7 @@ pub enum Expression {
     },
     Call {
         function: Box<Expression>,
-        arguments: Vec<Box<Expression>>,
+        arguments: Vec<Expression>,
     },
 }
 
@@ -57,14 +57,10 @@ impl Display for Expression {
             Expression::Literal(Literal::String(s)) => write!(f, "String ({})", s),
             Expression::Literal(Literal::Boolean(b)) => write!(f, "Bool ({})", b),
             Expression::Identifier(i) => write!(f, "Ident ({})", i),
-            Expression::Infix(op, left, right) => write!(
-                f,
-                "{} Left {} , Right {}",
-                op.to_string(),
-                left.to_string(),
-                right.to_string()
-            ),
-            Expression::Prefix(pr, exp) => write!(f, "{} Exp {}", pr.to_string(), exp.to_string()),
+            Expression::Infix(op, left, right) => {
+                write!(f, "{} Left {} , Right {}", op, left, right)
+            }
+            Expression::Prefix(pr, exp) => write!(f, "{} {}", pr, exp),
             Expression::If {
                 condition,
                 consequence,
@@ -86,18 +82,11 @@ impl Display for Expression {
                         write!(
                             f,
                             "If {} {{ {} }} else {}",
-                            condition.to_string(),
-                            consequence_block,
-                            alt_block
+                            condition, consequence_block, alt_block
                         )
                     }
                     None => {
-                        write!(
-                            f,
-                            "If {} {{ {} }}",
-                            condition.to_string(),
-                            consequence_block
-                        )
+                        write!(f, "If {} {{ {} }}", condition, consequence_block)
                     }
                 }
             }
@@ -122,7 +111,7 @@ impl Display for Expression {
             } => write!(
                 f,
                 "Call {} , {}",
-                function.to_string(),
+                function,
                 arguments
                     .iter()
                     .map(|arg| arg.to_string())
