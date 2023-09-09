@@ -12,9 +12,8 @@ impl Program {
         for stmt in self.statements.iter() {
             result = stmt.eval(env);
 
-            match result {
-                Object::Return(_) => break,
-                _ => {}
+            if let Object::Return(_) = result {
+                break;
             }
         }
 

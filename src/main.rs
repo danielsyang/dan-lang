@@ -23,6 +23,6 @@ fn main() {
 
         let obj = program.eval_statements(&mut env);
 
-        println!("{}", obj.to_string());
+        println!("{}", obj);
     }
 }

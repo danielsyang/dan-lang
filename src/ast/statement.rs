@@ -40,7 +40,7 @@ impl Statement {
                 let val = exp.eval(env);
                 env.set(ident.clone(), val.clone());
 
-                return val;
+                val
             }
         }
     }
