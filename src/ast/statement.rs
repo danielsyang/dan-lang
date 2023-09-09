@@ -2,7 +2,10 @@ use std::fmt::Display;
 
 use crate::eval::{environment::Environment, object::Object};
 
-use super::{expression::Expression, Identifier};
+use super::expression::Expression;
+
+pub type Block = Vec<Statement>;
+pub type Identifier = String;
 
 #[derive(Debug, Clone)]
 pub enum Statement {
@@ -26,10 +29,19 @@ impl Display for Statement {
 }
 
 impl Statement {
-    pub fn eval(&self, env: &Environment) -> Object {
+    pub fn eval(&self, env: &mut Environment) -> Object {
         match self {
             Statement::Expression(exp) => exp.eval(env),
-            _ => todo!("got {}", self),
+            Statement::Return(r) => {
+                let result = r.eval(env);
+                Object::Return(Box::new(result))
+            }
+            Statement::Let(ident, exp) => {
+                let val = exp.eval(env);
+                env.set(ident.clone(), val.clone());
+
+                return val;
+            }
         }
     }
 }

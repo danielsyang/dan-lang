@@ -7,7 +7,7 @@ pub struct Program {
 }
 
 impl Program {
-    pub fn eval_statements(&self, env: &Environment) -> Object {
+    pub fn eval_statements(&self, env: &mut Environment) -> Object {
         let mut result = Object::None;
         for stmt in self.statements.iter() {
             result = stmt.eval(env);

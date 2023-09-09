@@ -11,8 +11,7 @@ use crate::{
 use super::{
     expression::{Expression, Operator, Prefix},
     literal::Literal,
-    statement::Statement,
-    Block, Identifier,
+    statement::{Block, Identifier, Statement},
 };
 
 #[derive(Clone, Copy, Debug)]
