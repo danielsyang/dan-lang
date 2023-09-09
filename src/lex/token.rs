@@ -17,8 +17,7 @@ pub enum TokenType {
     // keywords
     Let,
     Function,
-    True,
-    False,
+    Boolean(bool),
     If,
     Else,
     Return,
@@ -165,6 +164,13 @@ impl Token {
         Self {
             kind: TokenType::String(string.clone()),
             literal: string,
+        }
+    }
+
+    pub fn boolean(b: bool) -> Self {
+        Self {
+            kind: TokenType::Boolean(b),
+            literal: b.to_string(),
         }
     }
 }

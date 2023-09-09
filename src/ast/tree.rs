@@ -1,9 +1,24 @@
+type Identifier = String;
+
 pub struct Program {
-    statements: Vec<Statement>,
+    pub statements: Vec<Statement>,
 }
 
-enum Statement {
-    Let,
-    Return,
-    IfElse,
+#[derive(Debug, Clone)]
+pub enum Statement {
+    Let(Identifier, Expression),
+    Return(Expression),
+}
+
+#[derive(Debug, Clone)]
+pub enum Expression {
+    Literal(Literal),
+    Identifier(Identifier),
+}
+
+#[derive(Debug, Clone)]
+pub enum Literal {
+    Number(i64),
+    String(String),
+    Boolean(bool),
 }

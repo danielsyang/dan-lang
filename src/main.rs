@@ -1,27 +1,28 @@
 use std::io::{stdin, stdout, Write};
 
-use crate::{ast::parser::Parser, eval::environment::Environment};
+use crate::ast::parser::Parser;
 
 mod ast;
 // mod eval;
 mod lex;
 
 fn main() {
-    // println!("This is the Dan-Lang programming language!");
-    // println!("Feel free to type in commands");
+    println!("This is the Dan-Lang programming language!");
+    println!("Feel free to type in commands");
     // let mut env = Environment::new();
 
-    // loop {
-    //     print!(">> ");
-    //     stdout().flush().unwrap();
-    //     let mut buffer = String::new();
-    //     stdin().read_line(&mut buffer).expect("Failed to read line");
+    loop {
+        print!(">> ");
 
-    //     let mut p = Parser::new(buffer.as_str());
-    //     let program = p.build_ast();
+        stdout().flush().unwrap();
+        let mut buffer = String::new();
+        stdin().read_line(&mut buffer).expect("Failed to read line");
 
-    //     let obj = program.eval_statements(&mut env);
+        let mut p = Parser::new(buffer.as_str());
+        let _program = p.build_ast();
 
-    //     println!("{}", obj.inspect());
-    // }
+        // let obj = program.eval_statements(&mut env);
+
+        // println!("{}", obj.inspect());
+    }
 }

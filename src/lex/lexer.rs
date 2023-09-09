@@ -35,8 +35,8 @@ impl Lexer {
             match word.as_str() {
                 "let" => return Some(Token::new_let()),
                 "fn" => return Some(Token::function()),
-                "true" => return Some(Token::new(TokenType::True, word)),
-                "false" => return Some(Token::new(TokenType::False, word)),
+                "true" => return Some(Token::boolean(true)),
+                "false" => return Some(Token::boolean(false)),
                 "return" => return Some(Token::new(TokenType::Return, word)),
                 "if" => return Some(Token::new(TokenType::If, word)),
                 "else" => return Some(Token::new(TokenType::Else, word)),
