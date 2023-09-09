@@ -1,11 +1,19 @@
 use std::collections::VecDeque;
 
-use crate::lex::{
-    lexer::Lexer,
-    token::{Token, TokenType},
+use crate::{
+    eval::program::Program,
+    lex::{
+        lexer::Lexer,
+        token::{Token, TokenType},
+    },
 };
 
-use super::tree::{Block, Expression, Identifier, Literal, Operator, Prefix, Program, Statement};
+use super::{
+    expression::{Expression, Operator, Prefix},
+    literal::Literal,
+    statement::Statement,
+    Block, Identifier,
+};
 
 #[derive(Clone, Copy, Debug)]
 enum Precedence {

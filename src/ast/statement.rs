@@ -1,0 +1,35 @@
+use std::fmt::Display;
+
+use crate::eval::{environment::Environment, object::Object};
+
+use super::{expression::Expression, Identifier};
+
+#[derive(Debug, Clone)]
+pub enum Statement {
+    Let(Identifier, Expression),
+    Return(Expression),
+    Expression(Expression),
+}
+
+impl Display for Statement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Statement::Let(identifier, exp) => write!(f, "Let {} {}", identifier, exp),
+            Statement::Return(exp) => {
+                write!(f, "Return {}", exp)
+            }
+            Statement::Expression(exp) => {
+                write!(f, "{}", exp)
+            }
+        }
+    }
+}
+
+impl Statement {
+    pub fn eval(&self, env: &Environment) -> Object {
+        match self {
+            Statement::Expression(exp) => exp.eval(env),
+            _ => todo!("got {}", self),
+        }
+    }
+}

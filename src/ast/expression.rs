@@ -1,29 +1,47 @@
 use std::fmt::Display;
 
-pub type Identifier = String;
-pub type Block = Vec<Statement>;
+use crate::eval::{environment::Environment, object::Object};
 
-pub struct Program {
-    pub statements: Vec<Statement>,
+use super::{literal::Literal, Block, Identifier};
+
+#[derive(Debug, Clone)]
+pub enum Operator {
+    Plus,
+    Minus,
+    Multiply,
+    Divide,
+    Equal,
+    NotEqual,
+    GreaterThan,
+    LessThan,
+}
+
+impl Display for Operator {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Operator::Plus => write!(f, "+"),
+            Operator::Minus => write!(f, "-"),
+            Operator::Multiply => write!(f, "*"),
+            Operator::Divide => write!(f, "/"),
+            Operator::Equal => write!(f, "=="),
+            Operator::NotEqual => write!(f, "!="),
+            Operator::GreaterThan => write!(f, ">"),
+            Operator::LessThan => write!(f, "<"),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
-pub enum Statement {
-    Let(Identifier, Expression),
-    Return(Expression),
-    Expression(Expression),
+pub enum Prefix {
+    Bang,
+    Minus,
 }
 
-impl Display for Statement {
+impl Display for Prefix {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Statement::Let(identifier, exp) => write!(f, "Let {} {}", identifier, exp),
-            Statement::Return(exp) => {
-                write!(f, "Return {}", exp)
-            }
-            Statement::Expression(exp) => {
-                write!(f, "{}", exp)
-            }
+            Prefix::Bang => write!(f, "!"),
+            Prefix::Minus => write!(f, "-"),
         }
     }
 }
@@ -48,6 +66,29 @@ pub enum Expression {
         function: Box<Expression>,
         arguments: Vec<Expression>,
     },
+}
+
+impl Expression {
+    pub fn eval(&self, env: &Environment) -> Object {
+        match self {
+            Expression::Literal(l) => l.eval(),
+            Expression::Prefix(op, exp) => {
+                let right_exp = exp.eval(env);
+
+                match op {
+                    Prefix::Bang => match right_exp {
+                        Object::Boolean(b) => Object::Boolean(!b),
+                        _ => panic!("expected Boolean, got: {}", right_exp),
+                    },
+                    Prefix::Minus => match right_exp {
+                        Object::Number(n) => Object::Number(-n),
+                        _ => panic!("expected Number, got: {}", right_exp),
+                    },
+                }
+            }
+            _ => panic!("WHAT"),
+        }
+    }
 }
 
 impl Display for Expression {
@@ -118,55 +159,6 @@ impl Display for Expression {
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum Literal {
-    Number(i64),
-    String(String),
-    Boolean(bool),
-}
-
-#[derive(Debug, Clone)]
-pub enum Operator {
-    Plus,
-    Minus,
-    Multiply,
-    Divide,
-    Equal,
-    NotEqual,
-    GreaterThan,
-    LessThan,
-}
-
-impl Display for Operator {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Operator::Plus => write!(f, "+"),
-            Operator::Minus => write!(f, "-"),
-            Operator::Multiply => write!(f, "*"),
-            Operator::Divide => write!(f, "/"),
-            Operator::Equal => write!(f, "=="),
-            Operator::NotEqual => write!(f, "!="),
-            Operator::GreaterThan => write!(f, ">"),
-            Operator::LessThan => write!(f, "<"),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum Prefix {
-    Bang,
-    Minus,
-}
-
-impl Display for Prefix {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Prefix::Bang => write!(f, "!"),
-            Prefix::Minus => write!(f, "-"),
         }
     }
 }
