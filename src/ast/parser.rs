@@ -5,7 +5,7 @@ use crate::lex::{
     token::{Token, TokenType},
 };
 
-use super::tree::{Expression, Literal, Operator, Prefix, Program, Statement};
+use super::tree::{Block, Expression, Identifier, Literal, Operator, Prefix, Program, Statement};
 
 #[derive(Clone, Copy, Debug)]
 enum Precedence {
@@ -80,11 +80,7 @@ impl Parser {
         let mut result: Vec<Statement> = vec![];
 
         loop {
-            let parsed = match self.current_token.kind {
-                TokenType::Let => self.parse_let_statement(),
-                TokenType::Return => self.parse_return_statement(),
-                _ => self.parse_expression_statement(),
-            };
+            let parsed = self.parse_statement();
             result.push(parsed);
 
             if self.next_token.kind == TokenType::Eof {
@@ -94,6 +90,14 @@ impl Parser {
         }
 
         Program { statements: result }
+    }
+
+    fn parse_statement(&mut self) -> Statement {
+        match self.current_token.kind {
+            TokenType::Let => self.parse_let_statement(),
+            TokenType::Return => self.parse_return_statement(),
+            _ => self.parse_expression_statement(),
+        }
     }
 
     fn parse_let_statement(&mut self) -> Statement {
@@ -148,6 +152,8 @@ impl Parser {
             TokenType::BangSign => self.parse_prefix_expression(Prefix::Bang),
             TokenType::MinusSign => self.parse_prefix_expression(Prefix::Minus),
             TokenType::LeftParen => self.parse_grouped_expression(),
+            TokenType::If => self.parse_if_expression(),
+            TokenType::Function => self.parse_function_expression(),
             _ => panic!(
                 "parse_expression: not yet implemented, got {:?}",
                 self.current_token.kind
@@ -166,11 +172,7 @@ impl Parser {
                 TokenType::NotEq => self.parse_infix_expression(left_exp, Operator::NotEqual),
                 TokenType::LT => self.parse_infix_expression(left_exp, Operator::LessThan),
                 TokenType::GT => self.parse_infix_expression(left_exp, Operator::GreaterThan),
-                TokenType::LeftParen => {
-                    self.consume_token();
-                    // self.parse_call_expression(left_exp)
-                    todo!("self.parse_call_expression(left_exp)")
-                }
+                TokenType::LeftParen => self.parse_call_expression(left_exp),
                 _ => left_exp,
             };
         }
@@ -216,6 +218,171 @@ impl Parser {
         }
 
         exp
+    }
+
+    fn parse_if_expression(&mut self) -> Expression {
+        if !self.expect_next_token(TokenType::LeftParen) {
+            panic!(
+                "expected token: TokenType::LeftParen, got: {:?}",
+                self.next_token.kind
+            )
+        }
+
+        self.consume_token();
+
+        let condition = self.parse_expression(Precedence::Lowest);
+
+        if !self.expect_next_token(TokenType::RightParen) {
+            panic!(
+                "expected token: TokenType::RightParen, got: {:?}",
+                self.next_token.kind
+            )
+        }
+
+        if !self.expect_next_token(TokenType::LeftBrace) {
+            panic!(
+                "expected token: TokenType::LeftBrace, got: {:?}",
+                self.next_token.kind
+            )
+        }
+
+        let consequence = self.parse_block_statement();
+
+        let mut alternative: Option<Block> = None;
+
+        if self.next_token.kind == TokenType::Else {
+            self.consume_token();
+
+            if !self.expect_next_token(TokenType::LeftBrace) {
+                panic!(
+                    "else: expected token: TokenType::LeftBrace, got {:?}",
+                    self.next_token.kind
+                )
+            }
+
+            alternative = Some(self.parse_block_statement());
+        }
+
+        Expression::If {
+            condition: Box::new(condition),
+            consequence,
+            alternative,
+        }
+    }
+
+    fn parse_block_statement(&mut self) -> Block {
+        let mut statements: Vec<Statement> = vec![];
+
+        self.consume_token();
+
+        while self.current_token.kind != TokenType::RightBrace
+            && self.current_token.kind != TokenType::Eof
+        {
+            statements.push(self.parse_statement());
+            self.consume_token();
+        }
+
+        statements
+    }
+
+    fn parse_function_expression(&mut self) -> Expression {
+        if !self.expect_next_token(TokenType::Identifier) {
+            panic!(
+                "expected TokenType::Identifier, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        let identifier = self.current_token.literal.clone();
+
+        if !self.expect_next_token(TokenType::LeftParen) {
+            panic!(
+                "expected TokenType::LeftParen, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        let params = self.parse_function_parameters();
+
+        if !self.expect_next_token(TokenType::LeftBrace) {
+            panic!(
+                "expected TokenType::LeftParen, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        let body = self.parse_block_statement();
+
+        Expression::Function {
+            identifier,
+            parameters: params,
+            body,
+        }
+    }
+
+    fn parse_function_parameters(&mut self) -> Vec<Identifier> {
+        let mut identifiers: Vec<Identifier> = vec![];
+
+        if self.next_token.kind == TokenType::RightParen {
+            self.consume_token();
+            return identifiers;
+        }
+
+        self.consume_token();
+
+        identifiers.push(self.current_token.literal.clone());
+
+        while self.next_token.kind == TokenType::Comma {
+            self.consume_token();
+            self.consume_token();
+            identifiers.push(self.current_token.literal.clone());
+        }
+
+        if !self.expect_next_token(TokenType::RightParen) {
+            panic!(
+                "expected TokenType::RightParen, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        identifiers
+    }
+
+    fn parse_call_expression(&mut self, function: Expression) -> Expression {
+        self.consume_token();
+        let args = self.parse_call_arguments();
+
+        Expression::Call {
+            function: Box::new(function),
+            arguments: args,
+        }
+    }
+
+    fn parse_call_arguments(&mut self) -> Vec<Box<Expression>> {
+        let mut args: Vec<Box<Expression>> = vec![];
+
+        if self.next_token.kind == TokenType::RightParen {
+            self.consume_token();
+            return args;
+        }
+
+        self.consume_token();
+        args.push(Box::new(self.parse_expression(Precedence::Lowest)));
+
+        while self.next_token.kind == TokenType::Comma {
+            self.consume_token();
+            self.consume_token();
+            args.push(Box::new(self.parse_expression(Precedence::Lowest)));
+        }
+
+        if !self.expect_next_token(TokenType::RightParen) {
+            panic!(
+                "parse_call_arguments expected TokenType::RightParen, got {:?}",
+                self.next_token.kind
+            )
+        }
+
+        args
     }
 
     fn current_precedence(&self) -> Precedence {
@@ -291,7 +458,7 @@ mod test {
         let expected = [
             "Return Number (5)",
             "Return Number (100)",
-            "Return + Left Ident (foobar) | Right Number (2)",
+            "Return + Left Ident (foobar) , Right Number (2)",
         ];
         let result = p.build_ast();
 
@@ -354,23 +521,23 @@ mod test {
 
         let mut p = Parser::new(input);
         let expected = [
-            "+ Left Number (5) | Right Number (5)",
-            "- Left Number (5) | Right Number (5)",
-            "* Left Number (5) | Right Number (5)",
-            "/ Left Number (5) | Right Number (5)",
-            "> Left Number (5) | Right Number (5)",
-            "< Left Number (5) | Right Number (5)",
-            "== Left Number (5) | Right Number (5)",
-            "!= Left Number (5) | Right Number (5)",
-            "+ Left Ident (foobar) | Right Ident (foobar)",
-            "- Left Ident (bar) | Right Ident (bar)",
-            "* Left Ident (bar) | Right Ident (bar)",
-            "== Left Bool (true) | Right Bool (true)",
-            "!= Left Bool (false) | Right Bool (true)",
-            "+ Left Number (5) | Right * Left Number (5) | Right Number (5)",
-            "+ Left - Exp Number (1) | Right Number (2)",
-            "- Left + Left + Left Ident (a) | Right * Left Ident (b) | Right Ident (c) | Right / Left Ident (d) | Right Ident (e) | Right Ident (f)",
-            "== Left > Left Number (3) | Right Number (5) | Right Bool (false)",
+            "+ Left Number (5) , Right Number (5)",
+            "- Left Number (5) , Right Number (5)",
+            "* Left Number (5) , Right Number (5)",
+            "/ Left Number (5) , Right Number (5)",
+            "> Left Number (5) , Right Number (5)",
+            "< Left Number (5) , Right Number (5)",
+            "== Left Number (5) , Right Number (5)",
+            "!= Left Number (5) , Right Number (5)",
+            "+ Left Ident (foobar) , Right Ident (foobar)",
+            "- Left Ident (bar) , Right Ident (bar)",
+            "* Left Ident (bar) , Right Ident (bar)",
+            "== Left Bool (true) , Right Bool (true)",
+            "!= Left Bool (false) , Right Bool (true)",
+            "+ Left Number (5) , Right * Left Number (5) , Right Number (5)",
+            "+ Left - Exp Number (1) , Right Number (2)",
+            "- Left + Left + Left Ident (a) , Right * Left Ident (b) , Right Ident (c) , Right / Left Ident (d) , Right Ident (e) , Right Ident (f)",
+            "== Left > Left Number (3) , Right Number (5) , Right Bool (false)",
         ];
 
         let result = p.build_ast();
@@ -391,12 +558,125 @@ mod test {
 
         let mut p = Parser::new(input);
         let expected = [
-            "+ Left + Left Number (1) | Right + Left Number (2) | Right Number (3) | Right Number (4)",
-            "* Left + Left Number (5) | Right Number (5) | Right Number (2)",
-            "/ Left Number (2) | Right + Left Number (5) | Right Number (5)",
-            "- Exp + Left Number (5) | Right Number (5)",
+            "+ Left + Left Number (1) , Right + Left Number (2) , Right Number (3) , Right Number (4)",
+            "* Left + Left Number (5) , Right Number (5) , Right Number (2)",
+            "/ Left Number (2) , Right + Left Number (5) , Right Number (5)",
+            "- Exp + Left Number (5) , Right Number (5)",
         ];
 
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_if_expression() {
+        let input = "
+        if (x > y) {
+            return x;
+        }
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = ["If > Left Ident (x) , Right Ident (y) { Return Ident (x) }"];
+
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_if_else_expression() {
+        let input = "
+        if (x > y) {
+            return x;
+        } else {
+            return y;
+        }
+        ";
+
+        let mut p = Parser::new(input);
+        let expected =
+            ["If > Left Ident (x) , Right Ident (y) { Return Ident (x) } else Return Ident (y)"];
+
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_function_parameters() {
+        let input = "
+        fn abc(x, y, w, z, a, b, c) { }
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = ["Fn abc ( x, y, w, z, a, b, c ) "];
+
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_function_expression() {
+        let input = "
+        fn abc(x, y) { 
+            return x;
+        }
+
+        fn xyz(a) {
+            return a + 3;
+        }
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = [
+            "Fn abc ( x, y ) Return Ident (x)",
+            "Fn xyz ( a ) Return + Left Ident (a) , Right Number (3)",
+        ];
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_call_expression() {
+        let input = "
+        add(1, 2 * 3, 4 + 5);
+        multiply (1, 2);
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = [
+            "Call Ident (add) , Number (1), * Left Number (2) , Right Number (3), + Left Number (4) , Right Number (5)",
+            "Call Ident (multiply) , Number (1), Number (2)",
+        ];
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_string_expression() {
+        let input = "
+        \"Hello world\";
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = ["String (Hello world)"];
         let result = p.build_ast();
 
         for (i, curr) in result.statements.iter().enumerate() {
