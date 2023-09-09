@@ -53,11 +53,19 @@ impl Parser {
     }
 
     fn consume_token(&mut self) {
+        println!(
+            "moved current {:?} to {:?}",
+            self.current_token.kind, self.next_token.kind
+        );
         self.current_token = self.next_token.clone();
         self.next_token = self
             .tokens
             .pop_front()
             .expect("Invalid state, there are no more tokens to consume.");
+        println!(
+            "moved next {:?} to {:?}",
+            self.current_token.kind, self.next_token.kind
+        );
     }
 
     fn expect_next_token(&mut self, kind: TokenType) -> bool {
@@ -75,8 +83,7 @@ impl Parser {
             let parsed = match self.current_token.kind {
                 TokenType::Let => self.parse_let_statement(),
                 TokenType::Return => self.parse_return_statement(),
-                _ => panic!(""),
-                // _ => self.parse_expression_statement(),
+                _ => self.parse_expression_statement(),
             };
             result.push(parsed);
 
@@ -143,6 +150,16 @@ impl Parser {
                 self.current_token.kind
             ),
         }
+    }
+
+    fn parse_expression_statement(&mut self) -> Statement {
+        let exp = self.parse_expression(Precedence::Lowest);
+
+        if self.next_token.kind == TokenType::Semicolon {
+            self.consume_token();
+        }
+
+        Statement::Expression(exp)
     }
 }
 

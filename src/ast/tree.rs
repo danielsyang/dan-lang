@@ -8,6 +8,7 @@ pub struct Program {
 pub enum Statement {
     Let(Identifier, Expression),
     Return(Expression),
+    Expression(Expression),
 }
 
 #[derive(Debug, Clone)]
