@@ -1,10 +1,26 @@
+use std::collections::HashMap;
+
 use crate::ast::statement::Block;
 
-use self::{environment::Environment, object::Object};
+use self::{env::Environment, object::Object};
 
-pub mod environment;
+pub mod env;
 pub mod object;
 pub mod program;
+
+fn builtin_len(args: Vec<Object>) -> Object {
+    if args.len() != 1 {
+        return Object::Error(format!(
+            "'len' does not accept more than 1 argument, got: {:?}",
+            args
+        ));
+    }
+
+    match args.get(0).unwrap() {
+        Object::String(s) => Object::Number(s.len().try_into().unwrap()),
+        _ => Object::Error(format!("invalid argument, got: {:?}", args)),
+    }
+}
 
 pub fn eval_block(block: &Block, env: &mut Environment) -> Object {
     let mut result = Object::None;
@@ -19,11 +35,19 @@ pub fn eval_block(block: &Block, env: &mut Environment) -> Object {
     result
 }
 
+pub fn builtin_functions() -> Environment {
+    let len_func = Object::Builtin { func: builtin_len };
+    let mut store: HashMap<String, Object> = HashMap::new();
+
+    store.insert(String::from("len"), len_func);
+
+    Environment { store }
+}
+
 #[cfg(test)]
 mod test {
+    use super::env::Environment;
     use crate::ast::parser::Parser;
-
-    use super::environment::Environment;
 
     #[test]
     fn eval_integer_expression() {
@@ -189,6 +213,25 @@ mod test {
         let mut env = Environment::new();
         let inputs = ["fn abc(x) { fn inner(y) { x + y; }; }; let first = abc(2); first(2)"];
         let expected = ["4"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn eval_builtin_len() {
+        let mut env = Environment::new();
+        let inputs = [
+            "len(\"\")",
+            "len(\"four\")",
+            "len(\"hello world\")",
+            "len(1)",
+        ];
+        let expected = ["0", "4", "11", "error: invalid argument, got: [Number(1)]"];
 
         for (i, input) in inputs.iter().enumerate() {
             let mut p = Parser::new(input);

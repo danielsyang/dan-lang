@@ -1,6 +1,6 @@
 use std::io::{stdin, stdout, Write};
 
-use crate::{ast::parser::Parser, eval::environment::Environment};
+use crate::{ast::parser::Parser, eval::env::Environment};
 
 mod ast;
 mod eval;

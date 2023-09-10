@@ -1,6 +1,6 @@
 use crate::ast::statement::Statement;
 
-use super::{environment::Environment, object::Object};
+use super::{env::Environment, object::Object};
 
 pub struct Program {
     pub statements: Vec<Statement>,

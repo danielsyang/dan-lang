@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::eval::{environment::Environment, eval_block, object::Object};
+use crate::eval::{env::Environment, eval_block, object::Object};
 
 use super::{
     literal::Literal,
@@ -418,6 +418,7 @@ impl Expression {
 
                         eval_block(&body, env)
                     }
+                    (Object::Builtin { func }, _) => func(args),
                     (_, _) => {
                         panic!("not a valid call {} ", self)
                     }

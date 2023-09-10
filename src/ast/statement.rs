@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::eval::{environment::Environment, object::Object};
+use crate::eval::{env::Environment, object::Object};
 
 use super::expression::Expression;
 

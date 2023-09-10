@@ -64,3 +64,8 @@
 #### 08 Sept 2023
 
 - [x] Token + Parse + Eval: Strings
+
+#### 09 Sept 2023
+
+- [x] Big refactor, removed traits and replaced them with enums
+- [x] Built-in: 'len'
