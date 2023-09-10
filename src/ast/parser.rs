@@ -24,6 +24,7 @@ enum Precedence {
     Product = 5,
     Prefix = 6,
     Call = 7,
+    Index = 8,
 }
 
 pub struct Parser {
@@ -153,11 +154,19 @@ impl Parser {
             TokenType::LeftParen => self.parse_grouped_expression(),
             TokenType::If => self.parse_if_expression(),
             TokenType::Function => self.parse_function_expression(),
+            TokenType::LeftBracket => {
+                Expression::Array(self.parse_elements_list(TokenType::RightBracket))
+            }
             _ => panic!(
                 "parse_expression: not yet implemented, got {:?}",
                 self.current_token.kind
             ),
         };
+
+        println!("LEFT: {}", left_exp);
+
+        println!("CURR_PRECEDENCE {:?}", p);
+        println!("NEXT_PRECEDENCE {}", self.next_precedence());
 
         while (p as u8) < self.next_precedence() && self.next_token.kind != TokenType::Semicolon {
             left_exp = match self.next_token.kind {
@@ -172,6 +181,7 @@ impl Parser {
                 TokenType::LT => self.parse_infix_expression(left_exp, Operator::LessThan),
                 TokenType::GT => self.parse_infix_expression(left_exp, Operator::GreaterThan),
                 TokenType::LeftParen => self.parse_call_expression(left_exp),
+                TokenType::LeftBracket => self.parse_index_expression(left_exp),
                 _ => left_exp,
             };
         }
@@ -349,7 +359,7 @@ impl Parser {
 
     fn parse_call_expression(&mut self, function: Expression) -> Expression {
         self.consume_token();
-        let args = self.parse_call_arguments();
+        let args = self.parse_elements_list(TokenType::RightParen);
 
         Expression::Call {
             function: Box::new(function),
@@ -357,31 +367,49 @@ impl Parser {
         }
     }
 
-    fn parse_call_arguments(&mut self) -> Vec<Expression> {
-        let mut args: Vec<Expression> = vec![];
+    fn parse_elements_list(&mut self, end: TokenType) -> Vec<Expression> {
+        let mut elements: Vec<Expression> = vec![];
 
-        if self.next_token.kind == TokenType::RightParen {
+        if self.next_token.kind == end {
             self.consume_token();
-            return args;
+            return elements;
         }
 
         self.consume_token();
-        args.push(self.parse_expression(Precedence::Lowest));
+        elements.push(self.parse_expression(Precedence::Lowest));
 
         while self.next_token.kind == TokenType::Comma {
             self.consume_token();
             self.consume_token();
-            args.push(self.parse_expression(Precedence::Lowest));
+            elements.push(self.parse_expression(Precedence::Lowest));
         }
 
-        if !self.expect_next_token(TokenType::RightParen) {
+        if !self.expect_next_token(end.clone()) {
             panic!(
-                "parse_call_arguments expected TokenType::RightParen, got {:?}",
-                self.next_token.kind
+                "parse_call_arguments expected {:?}, got {:?}",
+                end, self.next_token.kind
             )
         }
 
-        args
+        elements
+    }
+
+    fn parse_index_expression(&mut self, left_exp: Expression) -> Expression {
+        println!("HELLO, {}", left_exp);
+        self.consume_token();
+
+        let index = self.parse_expression(Precedence::Lowest);
+
+        println!("MY INDEX, {}", index);
+
+        // if !self.expect_next_token(TokenType::Semicolon) {
+        //     panic!("expected Semicolon, got: {:?}", self.next_token.kind)
+        // }
+
+        Expression::Index {
+            left: Box::new(left_exp),
+            index: Box::new(index),
+        }
     }
 
     fn current_precedence(&self) -> Precedence {
@@ -395,6 +423,7 @@ impl Parser {
             TokenType::SlashSign => Precedence::Product,
             TokenType::MultiplicationSign => Precedence::Product,
             TokenType::LeftParen => Precedence::Call,
+            TokenType::LeftBracket => Precedence::Index,
             _ => Precedence::Lowest,
         }
     }
@@ -410,6 +439,7 @@ impl Parser {
             TokenType::SlashSign => Precedence::Product as u8,
             TokenType::MultiplicationSign => Precedence::Product as u8,
             TokenType::LeftParen => Precedence::Call as u8,
+            TokenType::LeftBracket => Precedence::Index as u8,
             _ => Precedence::Lowest as u8,
         }
     }
@@ -676,6 +706,47 @@ mod test {
 
         let mut p = Parser::new(input);
         let expected = ["String (Hello world)"];
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_arrays_expression() {
+        let input = "
+        [1, 2, 3];
+        let a = [\"hello\", \"world\"];
+        let b = [];
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = [
+            "[ Number (1), Number (2), Number (3) ]",
+            "Let a [ String (hello), String (world) ]",
+            "Let b [  ]",
+        ];
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_index_operators() {
+        // arr[2];
+        let input = "
+        arr[1];
+        [1, 2, 3][100];
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = [
+            "(Ident (arr) [[ Number (1) ]])",
+            "([ Number (1), Number (2), Number (3) ] [[ Number (100) ]])",
+        ];
         let result = p.build_ast();
 
         for (i, curr) in result.statements.iter().enumerate() {

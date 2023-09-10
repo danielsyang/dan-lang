@@ -4,23 +4,26 @@ use std::fmt::Debug;
 pub enum TokenType {
     Comma,
     Semicolon,
-    // Illegal,
     Eof,
     Identifier,
-    Int(i64),
     LeftParen,
     RightParen,
     LeftBrace,
     RightBrace,
-    String(String),
+    LeftBracket,
+    RightBracket,
 
     // keywords
     Let,
     Function,
-    Boolean(bool),
     If,
     Else,
     Return,
+
+    // literals
+    Boolean(bool),
+    String(String),
+    Int(i64),
 
     // whitespace is a generic term that represents ' ', or '\n', or '\r'
     Whitespace,
@@ -110,6 +113,20 @@ impl Token {
         Self {
             kind: TokenType::RightBrace,
             literal: "}".to_string(),
+        }
+    }
+
+    pub fn left_bracket() -> Self {
+        Self {
+            kind: TokenType::LeftBracket,
+            literal: "[".to_string(),
+        }
+    }
+
+    pub fn right_bracket() -> Self {
+        Self {
+            kind: TokenType::RightBracket,
+            literal: "]".to_string(),
         }
     }
 

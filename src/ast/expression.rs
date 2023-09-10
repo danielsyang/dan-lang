@@ -69,6 +69,11 @@ pub enum Expression {
         function: Box<Expression>,
         arguments: Vec<Expression>,
     },
+    Array(Vec<Expression>),
+    Index {
+        left: Box<Expression>,
+        index: Box<Expression>,
+    },
 }
 
 impl Expression {
@@ -424,6 +429,8 @@ impl Expression {
                     }
                 }
             }
+            Expression::Array(_) => todo!("eval arrays"),
+            Expression::Index { index: _, left: _ } => todo!("eval index"),
         }
     }
 }
@@ -496,6 +503,20 @@ impl Display for Expression {
                     .collect::<Vec<_>>()
                     .join(", ")
             ),
+
+            Expression::Array(elements) => write!(
+                f,
+                "[ {} ]",
+                elements
+                    .iter()
+                    .map(|el| el.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
+
+            Expression::Index { index, left } => {
+                write!(f, "({} [{}])", left.to_string(), index.to_string(),)
+            }
         }
     }
 }

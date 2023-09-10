@@ -82,6 +82,8 @@ impl Lexer {
             '}' => Some(Token::right_brace()),
             '(' => Some(Token::left_paren()),
             ')' => Some(Token::right_paren()),
+            '[' => Some(Token::left_bracket()),
+            ']' => Some(Token::right_bracket()),
             ',' => Some(Token::comma()),
             '<' => Some(Token::lt()),
             '>' => Some(Token::gt()),
@@ -329,6 +331,64 @@ mod test {
             Token::identifier("cde".to_string()),
             Token::assign_sign(),
             Token::string("Hello world".to_string()),
+            Token::semicolon(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn tokenize_arrays() {
+        let input = "
+            let abc = [1, 2, \"hello world\"];
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::new_let(),
+            Token::identifier("abc".to_string()),
+            Token::assign_sign(),
+            Token::left_bracket(),
+            Token::int(1),
+            Token::comma(),
+            Token::int(2),
+            Token::comma(),
+            Token::string("hello world".to_string()),
+            Token::right_bracket(),
+            Token::semicolon(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn tokenize_indexes() {
+        let input = "
+            arr[1];
+            [1, 2, 3][100];
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::identifier("arr".to_string()),
+            Token::left_bracket(),
+            Token::int(1),
+            Token::right_bracket(),
+            Token::semicolon(),
+            Token::left_bracket(),
+            Token::int(1),
+            Token::comma(),
+            Token::int(2),
+            Token::comma(),
+            Token::int(3),
+            Token::right_bracket(),
+            Token::left_bracket(),
+            Token::int(100),
+            Token::right_bracket(),
             Token::semicolon(),
             Token::eof(),
         ];
