@@ -240,4 +240,32 @@ mod test {
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
     }
+
+    #[test]
+    fn eval_arrays_expression() {
+        let mut env = Environment::new();
+        let inputs = ["[1, 2, 3];", "[1, 2 + 2, 3 + 3];"];
+        let expected = ["[ 1, 2, 3 ]", "[ 1, 4, 6 ]"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn eval_indexes_arrays() {
+        let mut env = Environment::new();
+        let inputs = ["[1, 2, 3][0];", "[1, 2 + 2, 3 + 3][2];"];
+        let expected = ["1", "6"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
 }

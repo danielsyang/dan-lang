@@ -163,11 +163,6 @@ impl Parser {
             ),
         };
 
-        println!("LEFT: {}", left_exp);
-
-        println!("CURR_PRECEDENCE {:?}", p);
-        println!("NEXT_PRECEDENCE {}", self.next_precedence());
-
         while (p as u8) < self.next_precedence() && self.next_token.kind != TokenType::Semicolon {
             left_exp = match self.next_token.kind {
                 TokenType::PlusSign => self.parse_infix_expression(left_exp, Operator::Plus),
@@ -395,16 +390,9 @@ impl Parser {
     }
 
     fn parse_index_expression(&mut self, left_exp: Expression) -> Expression {
-        println!("HELLO, {}", left_exp);
         self.consume_token();
 
         let index = self.parse_expression(Precedence::Lowest);
-
-        println!("MY INDEX, {}", index);
-
-        // if !self.expect_next_token(TokenType::Semicolon) {
-        //     panic!("expected Semicolon, got: {:?}", self.next_token.kind)
-        // }
 
         Expression::Index {
             left: Box::new(left_exp),

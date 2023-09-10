@@ -3,6 +3,7 @@ use std::fmt::Display;
 use crate::ast::statement::{Block, Identifier};
 
 type BuiltinFunction = fn(Vec<Object>) -> Object;
+type Elements = Vec<Object>;
 
 #[derive(Debug, Clone)]
 pub enum Object {
@@ -17,6 +18,7 @@ pub enum Object {
         parameters: Vec<Identifier>,
         body: Block,
     },
+    Array(Elements),
     Builtin {
         func: BuiltinFunction,
     },
@@ -51,7 +53,16 @@ impl Display for Object {
                         .join("\n")
                 )
             }
-            Object::Builtin { func: _func } => write!(f, ""),
+            Object::Builtin { func: _ } => write!(f, ""),
+            Object::Array(elements) => write!(
+                f,
+                "[ {} ]",
+                elements
+                    .iter()
+                    .map(|elem| elem.to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ),
         }
     }
 }

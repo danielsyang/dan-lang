@@ -2,6 +2,8 @@ use std::fmt::Display;
 
 use crate::eval::{env::Environment, eval_block, object::Object};
 
+type Elements = Vec<Expression>;
+
 use super::{
     literal::Literal,
     statement::{Block, Identifier},
@@ -69,7 +71,7 @@ pub enum Expression {
         function: Box<Expression>,
         arguments: Vec<Expression>,
     },
-    Array(Vec<Expression>),
+    Array(Elements),
     Index {
         left: Box<Expression>,
         index: Box<Expression>,
@@ -429,8 +431,45 @@ impl Expression {
                     }
                 }
             }
-            Expression::Array(_) => todo!("eval arrays"),
-            Expression::Index { index: _, left: _ } => todo!("eval index"),
+            Expression::Array(elements) => {
+                let arr = elements
+                    .iter()
+                    .map(|el| el.eval(env))
+                    .collect::<Vec<Object>>();
+
+                Object::Array(arr)
+            }
+            Expression::Index { index, left } => {
+                let left_exp = left.eval(env);
+                let index_exp = index.eval(env);
+
+                match (&left_exp, &index_exp) {
+                    (Object::Array(arr), Object::Array(index)) => {
+                        if index.len() != 1 {
+                            return Object::Error(format!("invalid index, got {:?}", index));
+                        }
+
+                        match index.get(0).unwrap() {
+                            Object::Number(n) => {
+                                return match arr.get(*n as usize) {
+                                    Some(obj) => obj.clone(),
+                                    None => Object::None,
+                                };
+                            }
+                            _ => Object::Error(format!("invalid index, got {:?}", index)),
+                        }
+                    }
+                    _ => {
+                        dbg!(&left_exp);
+                        dbg!(&index_exp);
+
+                        return Object::Error(format!(
+                            "not supported, got: {:?}, {:?}",
+                            left_exp, index_exp
+                        ));
+                    }
+                }
+            }
         }
     }
 }
@@ -515,7 +554,7 @@ impl Display for Expression {
             ),
 
             Expression::Index { index, left } => {
-                write!(f, "({} [{}])", left.to_string(), index.to_string(),)
+                write!(f, "({} [{}])", left, index)
             }
         }
     }
