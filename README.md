@@ -69,3 +69,8 @@
 
 - [x] Big refactor, removed traits and replaced them with enums
 - [x] Built-in: 'len'
+
+#### 10 Sept 2023
+
+- [x] Token + Parse + Eval: Arrays
+- [x] Token + Parse + Eval: Indexes
