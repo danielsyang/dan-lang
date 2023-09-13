@@ -18,6 +18,41 @@ fn builtin_len(args: Vec<Object>) -> Object {
 
     match args.get(0).unwrap() {
         Object::String(s) => Object::Number(s.len().try_into().unwrap()),
+        Object::Array(arr) => Object::Number(arr.len() as i64),
+        _ => Object::Error(format!("invalid argument, got: {:?}", args)),
+    }
+}
+
+fn builtin_first(args: Vec<Object>) -> Object {
+    if args.len() != 1 {
+        return Object::Error(format!(
+            "'first' does not accept more than 1 argument, got: {:?}",
+            args
+        ));
+    }
+
+    match args.get(0).unwrap() {
+        Object::Array(arr) => match arr.first() {
+            None => Object::None,
+            Some(v) => v.clone(),
+        },
+        _ => Object::Error(format!("invalid argument, got: {:?}", args)),
+    }
+}
+
+fn builtin_last(args: Vec<Object>) -> Object {
+    if args.len() != 1 {
+        return Object::Error(format!(
+            "'last' does not accept more than 1 argument, got: {:?}",
+            args
+        ));
+    }
+
+    match args.get(0).unwrap() {
+        Object::Array(arr) => match arr.last() {
+            None => Object::None,
+            Some(v) => v.clone(),
+        },
         _ => Object::Error(format!("invalid argument, got: {:?}", args)),
     }
 }
@@ -37,9 +72,16 @@ pub fn eval_block(block: &Block, env: &mut Environment) -> Object {
 
 pub fn builtin_functions() -> Environment {
     let len_func = Object::Builtin { func: builtin_len };
+    let first_func = Object::Builtin {
+        func: builtin_first,
+    };
+    let last_func = Object::Builtin { func: builtin_last };
+
     let mut store: HashMap<String, Object> = HashMap::new();
 
     store.insert(String::from("len"), len_func);
+    store.insert(String::from("first"), first_func);
+    store.insert(String::from("last"), last_func);
 
     Environment { store }
 }

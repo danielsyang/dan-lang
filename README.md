@@ -74,3 +74,7 @@
 
 - [x] Token + Parse + Eval: Arrays
 - [x] Token + Parse + Eval: Indexes
+
+#### 13 Sept 2023
+
+- [x] Built-in: 'first' + 'last'

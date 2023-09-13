@@ -97,33 +97,24 @@ impl Expression {
                 }
             }
             Expression::Infix(op, left_exp, right_exp) => {
-                let left = left_exp.eval(env);
-                let right = right_exp.eval(env);
+                let mut left = left_exp.eval(env);
+                let mut right = right_exp.eval(env);
+
+                loop {
+                    match (&left, &right) {
+                        (Object::Return(l), _) => {
+                            left = l.as_ref().clone();
+                        }
+                        (_, Object::Return(r)) => {
+                            right = r.as_ref().clone();
+                        }
+                        _ => break,
+                    };
+                }
 
                 match (op, &left, &right) {
                     (Operator::Plus, _, _) => match (&left, &right) {
                         (Object::Number(l), Object::Number(r)) => Object::Number(l + r),
-                        (Object::Return(l), Object::Return(r)) => match (l.as_ref(), r.as_ref()) {
-                            (Object::Number(l), Object::Number(r)) => Object::Number(l + r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation + on numbers, got: {} and {} ",
-                                l, r,
-                            )),
-                        },
-                        (Object::Number(l), Object::Return(r)) => match r.as_ref() {
-                            Object::Number(r) => Object::Number(l + r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation + on numbers, got: {} and {} ",
-                                l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Number(r)) => match l.as_ref() {
-                            Object::Number(l) => Object::Number(l + r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation + on numbers, got: {} and {} ",
-                                l, r,
-                            )),
-                        },
                         _ => Object::Error(format!(
                             "Can only perform operation + on numbers, got: {} and {} ",
                             &left, &right,
@@ -131,27 +122,6 @@ impl Expression {
                     },
                     (Operator::Minus, _, _) => match (&left, &right) {
                         (Object::Number(l), Object::Number(r)) => Object::Number(l - r),
-                        (Object::Return(l), Object::Return(r)) => match (l.as_ref(), r.as_ref()) {
-                            (Object::Number(l), Object::Number(r)) => Object::Number(l - r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Number(l), Object::Return(r)) => match r.as_ref() {
-                            Object::Number(r) => Object::Number(l - r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Number(r)) => match l.as_ref() {
-                            Object::Number(l) => Object::Number(l - r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
                         _ => Object::Error(format!(
                             "Can only perform operation {} on numbers, got: {} and {} ",
                             op, &left, &right,
@@ -160,27 +130,6 @@ impl Expression {
 
                     (Operator::Multiply, _, _) => match (&left, &right) {
                         (Object::Number(l), Object::Number(r)) => Object::Number(l * r),
-                        (Object::Return(l), Object::Return(r)) => match (l.as_ref(), r.as_ref()) {
-                            (Object::Number(l), Object::Number(r)) => Object::Number(l * r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Number(l), Object::Return(r)) => match r.as_ref() {
-                            Object::Number(r) => Object::Number(l * r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Number(r)) => match l.as_ref() {
-                            Object::Number(l) => Object::Number(l * r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
                         _ => Object::Error(format!(
                             "Can only perform operation {} on numbers, got: {} and {} ",
                             op, left, right,
@@ -189,27 +138,6 @@ impl Expression {
 
                     (Operator::Divide, _, _) => match (&left, &right) {
                         (Object::Number(l), Object::Number(r)) => Object::Number(l / r),
-                        (Object::Return(l), Object::Return(r)) => match (l.as_ref(), r.as_ref()) {
-                            (Object::Number(l), Object::Number(r)) => Object::Number(l / r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Number(l), Object::Return(r)) => match r.as_ref() {
-                            Object::Number(r) => Object::Number(l / r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Number(r)) => match l.as_ref() {
-                            Object::Number(l) => Object::Number(l / r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
                         _ => Object::Error(format!(
                             "Can only perform operation {} on numbers, got: {} and {} ",
                             op, left, right,
@@ -218,27 +146,6 @@ impl Expression {
 
                     (Operator::GreaterThan, _, _) => match (&left, &right) {
                         (Object::Number(l), Object::Number(r)) => Object::Boolean(l > r),
-                        (Object::Return(l), Object::Return(r)) => match (l.as_ref(), r.as_ref()) {
-                            (Object::Number(l), Object::Number(r)) => Object::Boolean(l > r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Number(l), Object::Return(r)) => match r.as_ref() {
-                            Object::Number(r) => Object::Boolean(l > r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Number(r)) => match l.as_ref() {
-                            Object::Number(l) => Object::Boolean(l > r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
                         _ => Object::Error(format!(
                             "Can only perform operation {} on numbers, got: {} and {} ",
                             op, left, right,
@@ -247,27 +154,6 @@ impl Expression {
 
                     (Operator::LessThan, _, _) => match (&left, &right) {
                         (Object::Number(l), Object::Number(r)) => Object::Boolean(l < r),
-                        (Object::Return(l), Object::Return(r)) => match (l.as_ref(), r.as_ref()) {
-                            (Object::Number(l), Object::Number(r)) => Object::Boolean(l < r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Number(l), Object::Return(r)) => match r.as_ref() {
-                            Object::Number(r) => Object::Boolean(l < r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Number(r)) => match l.as_ref() {
-                            Object::Number(l) => Object::Boolean(l < r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on numbers, got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
                         _ => Object::Error(format!(
                             "Can only perform operation {} on numbers, got: {} and {} ",
                             op, left, right,
@@ -277,42 +163,6 @@ impl Expression {
                     (Operator::Equal, _, _) => match (&left, &right) {
                         (Object::Number(l), Object::Number(r)) => Object::Boolean(l == r),
                         (Object::Boolean(l), Object::Boolean(r)) => Object::Boolean(l == r),
-                        (Object::Return(l), Object::Return(r)) => match (l.as_ref(), r.as_ref()) {
-                            (Object::Number(l), Object::Number(r)) => Object::Boolean(l == r),
-                            (Object::Boolean(l), Object::Boolean(r)) => Object::Boolean(l == r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Number(l), Object::Return(r)) => match r.as_ref() {
-                            Object::Number(r) => Object::Boolean(l == r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Number(r)) => match l.as_ref() {
-                            Object::Number(l) => Object::Boolean(l == r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Boolean(l), Object::Return(r)) => match r.as_ref() {
-                            Object::Boolean(r) => Object::Boolean(l == r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Boolean(r)) => match l.as_ref() {
-                            Object::Boolean(l) => Object::Boolean(l == r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
                         _ => Object::Error(format!(
                             "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
                             op, left, right,
@@ -321,42 +171,6 @@ impl Expression {
                     (Operator::NotEqual, _, _) => match (&left, &right) {
                         (Object::Number(l), Object::Number(r)) => Object::Boolean(l != r),
                         (Object::Boolean(l), Object::Boolean(r)) => Object::Boolean(l != r),
-                        (Object::Return(l), Object::Return(r)) => match (l.as_ref(), r.as_ref()) {
-                            (Object::Number(l), Object::Number(r)) => Object::Boolean(l != r),
-                            (Object::Boolean(l), Object::Boolean(r)) => Object::Boolean(l != r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Number(l), Object::Return(r)) => match r.as_ref() {
-                            Object::Number(r) => Object::Boolean(l != r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Number(r)) => match l.as_ref() {
-                            Object::Number(l) => Object::Boolean(l != r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Boolean(l), Object::Return(r)) => match r.as_ref() {
-                        Object::Boolean(r) => Object::Boolean(l != r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
-                        (Object::Return(l), Object::Boolean(r)) => match l.as_ref() {
-                            Object::Boolean(l) => Object::Boolean(l != r),
-                            _ => Object::Error(format!(
-                                "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
-                                op, l, r,
-                            )),
-                        },
                         _ => Object::Error(format!(
                             "Can only perform operation {} on (numbers | boolean), got: {} and {} ",
                             op, left, right,
@@ -463,10 +277,10 @@ impl Expression {
                         dbg!(&left_exp);
                         dbg!(&index_exp);
 
-                        return Object::Error(format!(
+                        Object::Error(format!(
                             "not supported, got: {:?}, {:?}",
                             left_exp, index_exp
-                        ));
+                        ))
                     }
                 }
             }
