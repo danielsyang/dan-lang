@@ -1,4 +1,4 @@
-# DanLang
+# Dang Language
 
 ### Roadmap
 
