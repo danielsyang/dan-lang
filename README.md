@@ -78,3 +78,5 @@
 #### 13 Sept 2023
 
 - [x] Built-in: 'first' + 'last'
+- [x] HashMaps
+- [x] Interpreter is now fully functional :D 🎉🎉🎉🎉🎉

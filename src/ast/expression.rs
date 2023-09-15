@@ -1,6 +1,14 @@
-use std::fmt::Display;
+use std::{
+    collections::{BTreeMap, HashMap},
+    fmt::Display,
+    hash::Hash,
+};
 
-use crate::eval::{env::Environment, eval_block, object::Object};
+use crate::eval::{
+    env::Environment,
+    eval_block,
+    object::{CustomHash, HashKey, Object},
+};
 
 type Elements = Vec<Expression>;
 
@@ -9,7 +17,7 @@ use super::{
     statement::{Block, Identifier},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Operator {
     Plus,
     Minus,
@@ -36,7 +44,7 @@ impl Display for Operator {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Prefix {
     Bang,
     Minus,
@@ -51,7 +59,7 @@ impl Display for Prefix {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Expression {
     Literal(Literal),
     Identifier(Identifier),
@@ -75,6 +83,9 @@ pub enum Expression {
     Index {
         left: Box<Expression>,
         index: Box<Expression>,
+    },
+    HashMap {
+        pairs: BTreeMap<Expression, Expression>,
     },
 }
 
@@ -263,26 +274,52 @@ impl Expression {
                             return Object::Error(format!("invalid index, got {:?}", index));
                         }
 
-                        match index.get(0).unwrap() {
-                            Object::Number(n) => {
-                                return match arr.get(*n as usize) {
-                                    Some(obj) => obj.clone(),
-                                    None => Object::None,
-                                };
-                            }
+                        match index.first().unwrap() {
+                            Object::Number(n) => match arr.get(*n as usize) {
+                                Some(obj) => obj.clone(),
+                                None => Object::None,
+                            },
                             _ => Object::Error(format!("invalid index, got {:?}", index)),
                         }
                     }
-                    _ => {
-                        dbg!(&left_exp);
-                        dbg!(&index_exp);
+                    (Object::HashMap { pairs }, Object::Array(index)) => {
+                        if index.len() != 1 {
+                            return Object::Error(format!("invalid index, got {:?}", index));
+                        }
 
-                        Object::Error(format!(
-                            "not supported, got: {:?}, {:?}",
-                            left_exp, index_exp
-                        ))
+                        match index.first().unwrap().hash() {
+                            Some(hk) => match pairs.get(&hk) {
+                                Some(v) => v.clone(),
+                                None => Object::None,
+                            },
+                            None => {
+                                Object::Error(format!("Index is not hashable, got {:?}", index))
+                            }
+                        }
                     }
+                    _ => Object::Error(format!(
+                        "not supported, got: {:?}, {:?}",
+                        left_exp, index_exp
+                    )),
                 }
+            }
+            Expression::HashMap { pairs } => {
+                let mut hm: HashMap<HashKey, Object> = HashMap::new();
+
+                for (k, v) in pairs {
+                    let key_obj = k.eval(env);
+
+                    if key_obj.hash().is_none() {
+                        return Object::Error(format!("Key is not hashable, got {}", key_obj));
+                    }
+
+                    let key = key_obj.hash().unwrap();
+                    let val = v.eval(env);
+
+                    hm.insert(key, val);
+                }
+
+                Object::HashMap { pairs: hm }
             }
         }
     }
@@ -369,6 +406,16 @@ impl Display for Expression {
 
             Expression::Index { index, left } => {
                 write!(f, "({} [{}])", left, index)
+            }
+
+            Expression::HashMap { pairs } => {
+                let expr = pairs
+                    .iter()
+                    .map(|(k, v)| format!("{} : {}", k, v))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                write!(f, "{{ {} }}", expr)
             }
         }
     }

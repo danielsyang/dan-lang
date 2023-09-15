@@ -1,6 +1,6 @@
 use crate::eval::object::Object;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Literal {
     Number(i64),
     String(String),

@@ -310,4 +310,33 @@ mod test {
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
     }
+
+    #[test]
+    fn eval_hashmaps() {
+        let mut env = Environment::new();
+        let inputs = ["{\"one\": 10 - 9 }"];
+        let expected = ["{ \"one\" : 1 }"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn eval_hashmaps_value() {
+        let mut env = Environment::new();
+        let inputs =
+            ["let a = {\"one\": 10 - 9, \"two\": (1 * 1) + 1, 3: \"three\" }; a[\"one\"];"];
+        let expected = ["1"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let mut p = Parser::new(input);
+            let program = p.build_ast();
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
 }

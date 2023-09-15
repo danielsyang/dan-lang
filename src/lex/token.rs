@@ -4,6 +4,7 @@ use std::fmt::Debug;
 pub enum TokenType {
     Comma,
     Semicolon,
+    Colon,
     Eof,
     Identifier,
     LeftParen,
@@ -188,6 +189,13 @@ impl Token {
         Self {
             kind: TokenType::Boolean(b),
             literal: b.to_string(),
+        }
+    }
+
+    pub fn colon() -> Self {
+        Self {
+            kind: TokenType::Colon,
+            literal: ":".to_string(),
         }
     }
 }

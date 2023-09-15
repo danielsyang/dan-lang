@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 
 use crate::{
     eval::program::Program,
@@ -157,6 +157,7 @@ impl Parser {
             TokenType::LeftBracket => {
                 Expression::Array(self.parse_elements_list(TokenType::RightBracket))
             }
+            TokenType::LeftBrace => self.parse_hashmaps_literal(),
             _ => panic!(
                 "parse_expression: not yet implemented, got {:?}",
                 self.current_token.kind
@@ -398,6 +399,39 @@ impl Parser {
             left: Box::new(left_exp),
             index: Box::new(index),
         }
+    }
+
+    fn parse_hashmaps_literal(&mut self) -> Expression {
+        let mut btm: BTreeMap<Expression, Expression> = BTreeMap::new();
+
+        while self.next_token.kind != TokenType::RightBrace {
+            self.consume_token();
+            let key = self.parse_expression(Precedence::Lowest);
+
+            if !self.expect_next_token(TokenType::Colon) {
+                panic!("expected TokenType::Colon, got {:?}", self.next_token)
+            }
+
+            self.consume_token();
+            let value = self.parse_expression(Precedence::Lowest);
+
+            btm.insert(key, value);
+
+            if self.next_token.kind != TokenType::RightBrace
+                && !self.expect_next_token(TokenType::Comma)
+            {
+                panic!("Expected TokenType::Comma, got {:?}", self.next_token)
+            }
+        }
+
+        if !self.expect_next_token(TokenType::RightBrace) {
+            panic!(
+                "Expected TokenType::RightBrace, got: {:?}",
+                self.next_token.kind
+            )
+        }
+
+        Expression::HashMap { pairs: btm }
     }
 
     fn current_precedence(&self) -> Precedence {
@@ -734,6 +768,27 @@ mod test {
         let expected = [
             "(Ident (arr) [[ Number (1) ]])",
             "([ Number (1), Number (2), Number (3) ] [[ Number (100) ]])",
+        ];
+        let result = p.build_ast();
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_hashmap_operations() {
+        let input = "
+        let a = {};
+        let b = { \"one\": 1, \"two\": 2, \"three\": \"three\" };
+        {\"one\": 0 + 1, \"two\": 2 * 1, \"three\": (0 + 1) * 3 }
+        ";
+
+        let mut p = Parser::new(input);
+        let expected = [
+            "Let a {  }",
+            "Let b { String (one) : Number (1), String (three) : String (three), String (two) : Number (2) }",
+            "{ String (one) : + Left Number (0) , Right Number (1), String (three) : * Left + Left Number (0) , Right Number (1) , Right Number (3), String (two) : * Left Number (2) , Right Number (1) }",
         ];
         let result = p.build_ast();
 

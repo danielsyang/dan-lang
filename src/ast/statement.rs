@@ -7,7 +7,7 @@ use super::expression::Expression;
 pub type Block = Vec<Statement>;
 pub type Identifier = String;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Statement {
     Let(Identifier, Expression),
     Return(Expression),

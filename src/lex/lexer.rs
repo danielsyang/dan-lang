@@ -88,6 +88,7 @@ impl Lexer {
             '<' => Some(Token::lt()),
             '>' => Some(Token::gt()),
             '"' => Some(Token::string(self.consume_string())),
+            ':' => Some(Token::colon()),
             _ => panic!("token: {:?} has not been implemented yet.", curr),
         }
     }
@@ -390,6 +391,26 @@ mod test {
             Token::int(100),
             Token::right_bracket(),
             Token::semicolon(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn tokenize_hashmaps() {
+        let input = "
+            {\"foobar\": 10}
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::left_brace(),
+            Token::string("foobar".to_string()),
+            Token::colon(),
+            Token::int(10),
+            Token::right_brace(),
             Token::eof(),
         ];
         let result = run_tokenizer(lex);
