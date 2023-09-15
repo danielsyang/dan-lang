@@ -4,7 +4,7 @@
 
 #### 16 Aug 2023
 
-- [x] Redoing the entire lexer, now following the book "Writing and interpreter in GO" by Thorsten Ball
+- [x] Redoing the entire lexer, now following the book "Writing an interpreter in GO" by Thorsten Ball
 - [x] Start working on the parser and ASTLetStatement
 
 #### 21 Aug 2023
