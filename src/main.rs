@@ -18,8 +18,7 @@ fn main() {
         let mut buffer = String::new();
         stdin().read_line(&mut buffer).expect("Failed to read line");
 
-        let mut p = Parser::new(buffer.as_str());
-        let program = p.build_ast();
+        let program = Parser::build_ast(&buffer);
 
         let obj = program.eval_statements(&mut env);
 

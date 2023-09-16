@@ -83,3 +83,7 @@
 
 - [x] HashMaps
 - [x] Interpreter is now fully functional :D 🎉🎉🎉🎉🎉
+
+#### 16 Sept 2023
+
+- [x] Implemented error handling, no more panics

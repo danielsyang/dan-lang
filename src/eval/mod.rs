@@ -108,8 +108,7 @@ mod test {
         let expected = ["5", "10", "-10", "-5", "10", "32", "60", "37", "50"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -135,8 +134,7 @@ mod test {
         ];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -148,8 +146,7 @@ mod test {
         let inputs = ["!true;", "!false;", "!!true;", "!!false;"];
         let expected = ["false", "true", "true", "false"];
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -166,8 +163,7 @@ mod test {
         ];
         let expected = ["10", "10", "20", "None"];
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -192,8 +188,7 @@ mod test {
         let expected = ["10", "10", "10", "10"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -212,8 +207,7 @@ mod test {
         let expected = ["5", "25", "5", "15", "error: identifier not found: foobar"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -226,8 +220,7 @@ mod test {
         let expected = ["Fn abc ( x ) { + Left Ident (x) , Right Number (2) }"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -243,8 +236,7 @@ mod test {
         let expected = ["25", "20"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -257,8 +249,7 @@ mod test {
         let expected = ["4"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -276,8 +267,7 @@ mod test {
         let expected = ["0", "4", "11", "error: invalid argument, got: [Number(1)]"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -290,8 +280,7 @@ mod test {
         let expected = ["[ 1, 2, 3 ]", "[ 1, 4, 6 ]"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -304,8 +293,7 @@ mod test {
         let expected = ["1", "6"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -318,8 +306,7 @@ mod test {
         let expected = ["{ \"one\" : 1 }"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
@@ -333,8 +320,7 @@ mod test {
         let expected = ["1"];
 
         for (i, input) in inputs.iter().enumerate() {
-            let mut p = Parser::new(input);
-            let program = p.build_ast();
+            let program = Parser::build_ast(input);
             let result = program.eval_statements(&mut env);
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }

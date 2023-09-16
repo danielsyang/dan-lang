@@ -61,6 +61,7 @@ impl Display for Prefix {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Expression {
+    Error(String),
     Literal(Literal),
     Identifier(Identifier),
     Infix(Operator, Box<Expression>, Box<Expression>),
@@ -90,8 +91,13 @@ pub enum Expression {
 }
 
 impl Expression {
+    pub fn error<S: AsRef<str>>(s: S) -> Expression {
+        return Expression::Error(String::from(s.as_ref()));
+    }
+
     pub fn eval(&self, env: &mut Environment) -> Object {
         match self {
+            Expression::Error(s) => Object::Error(s.clone()),
             Expression::Literal(l) => l.eval(),
             Expression::Prefix(op, exp) => {
                 let right_exp = exp.eval(env);
@@ -99,11 +105,11 @@ impl Expression {
                 match op {
                     Prefix::Bang => match right_exp {
                         Object::Boolean(b) => Object::Boolean(!b),
-                        _ => panic!("expected Boolean, got: {}", right_exp),
+                        _ => Object::Error(format!("expected Boolean, got: {}", right_exp)),
                     },
                     Prefix::Minus => match right_exp {
                         Object::Number(n) => Object::Number(-n),
-                        _ => panic!("expected Number, got: {}", right_exp),
+                        _ => Object::Error(format!("expected Number, got: {}", right_exp)),
                     },
                 }
             }
@@ -199,7 +205,7 @@ impl Expression {
                     (Object::Boolean(true), _) => eval_block(consequence, env),
                     (Object::Boolean(false), Some(alt)) => eval_block(alt, env),
                     (Object::Boolean(false), None) => Object::None,
-                    (_, _) => panic!("condition did not evaluate to boolean"),
+                    (_, _) => Object::Error(String::from("condition did not evaluate to boolean")),
                 }
             }
             Expression::Identifier(ident) => match env.get(ident.clone()) {
@@ -239,21 +245,26 @@ impl Expression {
                         },
                         _,
                     ) => {
+                        let mut has_error = false;
+                        let mut error_idx = 0;
                         for (idx, param) in parameters.iter().enumerate() {
-                            let arg = args
-                                .get(idx)
-                                .unwrap_or_else(|| panic!("Missing parameter: {}", idx))
-                                .clone();
+                            if let Some(arg) = args.get(idx) {
+                                env.set(param.clone(), arg.clone());
+                            } else {
+                                error_idx = idx;
+                                has_error = true;
+                                break;
+                            }
+                        }
 
-                            env.set(param.clone(), arg);
+                        if has_error {
+                            return Object::Error(format!("Missing parameter: {}", error_idx));
                         }
 
                         eval_block(&body, env)
                     }
                     (Object::Builtin { func }, _) => func(args),
-                    (_, _) => {
-                        panic!("not a valid call {} ", self)
-                    }
+                    (_, _) => Object::Error(format!("not a valid call {} ", self)),
                 }
             }
             Expression::Array(elements) => {
@@ -328,6 +339,7 @@ impl Expression {
 impl Display for Expression {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Expression::Error(s) => write!(f, "error: ( {} ) ", s),
             Expression::Literal(Literal::Number(v)) => write!(f, "Number ({})", v),
             Expression::Literal(Literal::String(s)) => write!(f, "String ({})", s),
             Expression::Literal(Literal::Boolean(b)) => write!(f, "Bool ({})", b),

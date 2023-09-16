@@ -89,7 +89,7 @@ impl Lexer {
             '>' => Some(Token::gt()),
             '"' => Some(Token::string(self.consume_string())),
             ':' => Some(Token::colon()),
-            _ => panic!("token: {:?} has not been implemented yet.", curr),
+            _ => Some(Token::new(TokenType::Illegal, String::from(""))),
         }
     }
 

@@ -13,6 +13,7 @@ pub enum TokenType {
     RightBrace,
     LeftBracket,
     RightBracket,
+    Illegal,
 
     // keywords
     Let,

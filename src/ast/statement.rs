@@ -12,6 +12,7 @@ pub enum Statement {
     Let(Identifier, Expression),
     Return(Expression),
     Expression(Expression),
+    Error(String),
 }
 
 impl Display for Statement {
@@ -24,6 +25,7 @@ impl Display for Statement {
             Statement::Expression(exp) => {
                 write!(f, "{}", exp)
             }
+            Statement::Error(s) => write!(f, "error: ( {} )", s),
         }
     }
 }
@@ -42,6 +44,11 @@ impl Statement {
 
                 val
             }
+            Statement::Error(s) => Object::Error(s.clone()),
         }
+    }
+
+    pub fn error<S: AsRef<str>>(s: S) -> Statement {
+        return Statement::Error(String::from(s.as_ref()));
     }
 }

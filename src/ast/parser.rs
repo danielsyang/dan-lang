@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::BTreeMap;
 
 use crate::{
     eval::program::Program,
@@ -28,44 +28,25 @@ enum Precedence {
 }
 
 pub struct Parser {
-    tokens: VecDeque<Token>,
-    _errors: Vec<String>,
+    lex: Lexer,
     current_token: Token,
     next_token: Token,
 }
 
 impl Parser {
-    pub fn new(input: &str) -> Self {
-        let mut lex = Lexer::new(input);
-        let mut tokens: VecDeque<Token> = VecDeque::new();
-
-        while let Some(token) = lex.next_token() {
-            match token.kind {
-                TokenType::Whitespace => {}
-                _ => tokens.push_back(token),
+    fn analyze_next_token(lex: &mut Lexer) -> Token {
+        while let Some(t) = lex.next_token() {
+            if t.kind != TokenType::Whitespace {
+                return t;
             }
         }
 
-        let current_token = tokens
-            .pop_front()
-            .expect("Input did not produce any token.")
-            .clone();
-        let next_token = tokens.pop_front().expect("Expected at least EOF.").clone();
-
-        Self {
-            tokens,
-            _errors: vec![],
-            current_token,
-            next_token,
-        }
+        Token::new(TokenType::Illegal, String::from("Illegal"))
     }
 
     fn consume_token(&mut self) {
         self.current_token = self.next_token.clone();
-        self.next_token = self
-            .tokens
-            .pop_front()
-            .expect("Invalid state, there are no more tokens to consume.");
+        self.next_token = Parser::analyze_next_token(&mut self.lex);
     }
 
     fn expect_next_token(&mut self, kind: TokenType) -> bool {
@@ -76,17 +57,31 @@ impl Parser {
         false
     }
 
-    pub fn build_ast(&mut self) -> Program {
+    pub fn build_ast(input: &str) -> Program {
+        let mut lex = Lexer::new(input);
         let mut result: Vec<Statement> = vec![];
 
-        loop {
-            let parsed = self.parse_statement();
-            result.push(parsed);
+        let first = Parser::analyze_next_token(&mut lex);
+        let second = Parser::analyze_next_token(&mut lex);
 
-            if self.next_token.kind == TokenType::Eof {
+        let mut parser = Parser {
+            lex,
+            current_token: first,
+            next_token: second,
+        };
+
+        loop {
+            let parsed = parser.parse_statement();
+
+            match parsed {
+                Statement::Error(_) => break,
+                _ => result.push(parsed),
+            }
+
+            if parser.next_token.kind == TokenType::Eof {
                 break;
             }
-            self.consume_token();
+            parser.consume_token();
         }
 
         Program { statements: result }
@@ -102,19 +97,19 @@ impl Parser {
 
     fn parse_let_statement(&mut self) -> Statement {
         if !self.expect_next_token(TokenType::Identifier) {
-            panic!(
+            return Statement::error(format!(
                 "Expected next token to be TokenType::Identifier, got: {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         let identifier = self.current_token.literal.clone();
 
         if !self.expect_next_token(TokenType::Asssign) {
-            panic!(
+            return Statement::error(format!(
                 "Expected next token to be TokenType::Assign, got {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         self.consume_token();
@@ -122,10 +117,10 @@ impl Parser {
         let val = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_next_token(TokenType::Semicolon) {
-            panic!(
+            return Statement::error(format!(
                 "Expected next token to be TokenType::Semicolon, got {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         Statement::Let(identifier, val)
@@ -158,10 +153,12 @@ impl Parser {
                 Expression::Array(self.parse_elements_list(TokenType::RightBracket))
             }
             TokenType::LeftBrace => self.parse_hashmaps_literal(),
-            _ => panic!(
-                "parse_expression: not yet implemented, got {:?}",
-                self.current_token.kind
-            ),
+            _ => {
+                return Expression::error(format!(
+                    "parse_expression: not yet implemented, got {:?}",
+                    self.current_token.kind
+                ))
+            }
         };
 
         while (p as u8) < self.next_precedence() && self.next_token.kind != TokenType::Semicolon {
@@ -219,7 +216,7 @@ impl Parser {
         let exp = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_next_token(TokenType::RightParen) {
-            panic!("unexpected next token: TokenType::RightParen")
+            return Expression::error("unexpected next token: TokenType::RightParen");
         }
 
         exp
@@ -227,10 +224,10 @@ impl Parser {
 
     fn parse_if_expression(&mut self) -> Expression {
         if !self.expect_next_token(TokenType::LeftParen) {
-            panic!(
+            return Expression::error(format!(
                 "expected token: TokenType::LeftParen, got: {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         self.consume_token();
@@ -238,17 +235,17 @@ impl Parser {
         let condition = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_next_token(TokenType::RightParen) {
-            panic!(
+            return Expression::error(format!(
                 "expected token: TokenType::RightParen, got: {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         if !self.expect_next_token(TokenType::LeftBrace) {
-            panic!(
+            return Expression::error(format!(
                 "expected token: TokenType::LeftBrace, got: {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         let consequence = self.parse_block_statement();
@@ -259,10 +256,10 @@ impl Parser {
             self.consume_token();
 
             if !self.expect_next_token(TokenType::LeftBrace) {
-                panic!(
+                return Expression::error(format!(
                     "else: expected token: TokenType::LeftBrace, got {:?}",
                     self.next_token.kind
-                )
+                ));
             }
 
             alternative = Some(self.parse_block_statement());
@@ -292,45 +289,52 @@ impl Parser {
 
     fn parse_function_expression(&mut self) -> Expression {
         if !self.expect_next_token(TokenType::Identifier) {
-            panic!(
+            return Expression::error(format!(
                 "expected TokenType::Identifier, got {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         let identifier = self.current_token.literal.clone();
 
         if !self.expect_next_token(TokenType::LeftParen) {
-            panic!(
+            return Expression::error(format!(
                 "expected TokenType::LeftParen, got {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         let params = self.parse_function_parameters();
 
+        if params.is_none() {
+            return Expression::error(format!(
+                "expected TokenType::RightParen, got {:?}",
+                self.next_token.kind
+            ));
+        }
+
         if !self.expect_next_token(TokenType::LeftBrace) {
-            panic!(
+            return Expression::error(format!(
                 "expected TokenType::LeftParen, got {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         let body = self.parse_block_statement();
 
         Expression::Function {
             identifier,
-            parameters: params,
+            parameters: params.unwrap(),
             body,
         }
     }
 
-    fn parse_function_parameters(&mut self) -> Vec<Identifier> {
+    fn parse_function_parameters(&mut self) -> Option<Vec<Identifier>> {
         let mut identifiers: Vec<Identifier> = vec![];
 
         if self.next_token.kind == TokenType::RightParen {
             self.consume_token();
-            return identifiers;
+            return Some(identifiers);
         }
 
         self.consume_token();
@@ -344,13 +348,10 @@ impl Parser {
         }
 
         if !self.expect_next_token(TokenType::RightParen) {
-            panic!(
-                "expected TokenType::RightParen, got {:?}",
-                self.next_token.kind
-            )
+            return None;
         }
 
-        identifiers
+        Some(identifiers)
     }
 
     fn parse_call_expression(&mut self, function: Expression) -> Expression {
@@ -381,10 +382,10 @@ impl Parser {
         }
 
         if !self.expect_next_token(end.clone()) {
-            panic!(
+            Expression::error(format!(
                 "parse_call_arguments expected {:?}, got {:?}",
                 end, self.next_token.kind
-            )
+            ));
         }
 
         elements
@@ -409,7 +410,10 @@ impl Parser {
             let key = self.parse_expression(Precedence::Lowest);
 
             if !self.expect_next_token(TokenType::Colon) {
-                panic!("expected TokenType::Colon, got {:?}", self.next_token)
+                return Expression::error(format!(
+                    "expected TokenType::Colon, got {:?}",
+                    self.next_token
+                ));
             }
 
             self.consume_token();
@@ -420,15 +424,18 @@ impl Parser {
             if self.next_token.kind != TokenType::RightBrace
                 && !self.expect_next_token(TokenType::Comma)
             {
-                panic!("Expected TokenType::Comma, got {:?}", self.next_token)
+                return Expression::error(format!(
+                    "Expected TokenType::Comma, got {:?}",
+                    self.next_token
+                ));
             }
         }
 
         if !self.expect_next_token(TokenType::RightBrace) {
-            panic!(
+            return Expression::error(format!(
                 "Expected TokenType::RightBrace, got: {:?}",
                 self.next_token.kind
-            )
+            ));
         }
 
         Expression::HashMap { pairs: btm }
@@ -488,9 +495,7 @@ mod test {
             "Let myString String (My string)",
         ];
 
-        let mut p = Parser::new(input);
-
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -505,13 +510,12 @@ mod test {
         return foobar + 2;
         ";
 
-        let mut p = Parser::new(input);
         let expected = [
             "Return Number (5)",
             "Return Number (100)",
             "Return + Left Ident (foobar) , Right Number (2)",
         ];
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -530,7 +534,6 @@ mod test {
         5;
         ";
 
-        let mut p = Parser::new(input);
         let expected = [
             "! Number (5)",
             "- Number (15)",
@@ -541,7 +544,7 @@ mod test {
             "Number (5)",
         ];
 
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -570,7 +573,6 @@ mod test {
         3 > 5 == false;
         ";
 
-        let mut p = Parser::new(input);
         let expected = [
             "+ Left Number (5) , Right Number (5)",
             "- Left Number (5) , Right Number (5)",
@@ -591,7 +593,7 @@ mod test {
             "== Left > Left Number (3) , Right Number (5) , Right Bool (false)",
         ];
 
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -607,7 +609,6 @@ mod test {
         -(5 + 5);
         ";
 
-        let mut p = Parser::new(input);
         let expected = [
             "+ Left + Left Number (1) , Right + Left Number (2) , Right Number (3) , Right Number (4)",
             "* Left + Left Number (5) , Right Number (5) , Right Number (2)",
@@ -615,7 +616,7 @@ mod test {
             "- + Left Number (5) , Right Number (5)",
         ];
 
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -630,10 +631,9 @@ mod test {
         }
         ";
 
-        let mut p = Parser::new(input);
         let expected = ["If > Left Ident (x) , Right Ident (y) { Return Ident (x) }"];
 
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -650,11 +650,10 @@ mod test {
         }
         ";
 
-        let mut p = Parser::new(input);
         let expected =
             ["If > Left Ident (x) , Right Ident (y) { Return Ident (x) } else Return Ident (y)"];
 
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -667,10 +666,9 @@ mod test {
         fn abc(x, y, w, z, a, b, c) { }
         ";
 
-        let mut p = Parser::new(input);
         let expected = ["Fn abc ( x, y, w, z, a, b, c ) "];
 
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -689,12 +687,11 @@ mod test {
         }
         ";
 
-        let mut p = Parser::new(input);
         let expected = [
             "Fn abc ( x, y ) Return Ident (x)",
             "Fn xyz ( a ) Return + Left Ident (a) , Right Number (3)",
         ];
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -708,12 +705,11 @@ mod test {
         multiply (1, 2);
         ";
 
-        let mut p = Parser::new(input);
         let expected = [
             "Call Ident (add) , Number (1), * Left Number (2) , Right Number (3), + Left Number (4) , Right Number (5)",
             "Call Ident (multiply) , Number (1), Number (2)",
         ];
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -726,9 +722,8 @@ mod test {
         \"Hello world\";
         ";
 
-        let mut p = Parser::new(input);
         let expected = ["String (Hello world)"];
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -743,13 +738,12 @@ mod test {
         let b = [];
         ";
 
-        let mut p = Parser::new(input);
         let expected = [
             "[ Number (1), Number (2), Number (3) ]",
             "Let a [ String (hello), String (world) ]",
             "Let b [  ]",
         ];
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -764,12 +758,11 @@ mod test {
         [1, 2, 3][100];
         ";
 
-        let mut p = Parser::new(input);
         let expected = [
             "(Ident (arr) [[ Number (1) ]])",
             "([ Number (1), Number (2), Number (3) ] [[ Number (100) ]])",
         ];
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
@@ -784,13 +777,12 @@ mod test {
         {\"one\": 0 + 1, \"two\": 2 * 1, \"three\": (0 + 1) * 3 }
         ";
 
-        let mut p = Parser::new(input);
         let expected = [
             "Let a {  }",
             "Let b { String (one) : Number (1), String (three) : String (three), String (two) : Number (2) }",
             "{ String (one) : + Left Number (0) , Right Number (1), String (three) : * Left + Left Number (0) , Right Number (1) , Right Number (3), String (two) : * Left Number (2) , Right Number (1) }",
         ];
-        let result = p.build_ast();
+        let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
