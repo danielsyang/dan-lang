@@ -91,10 +91,6 @@ pub enum Expression {
 }
 
 impl Expression {
-    pub fn error<S: AsRef<str>>(s: S) -> Expression {
-        return Expression::Error(String::from(s.as_ref()));
-    }
-
     pub fn eval(&self, env: &mut Environment) -> Object {
         match self {
             Expression::Error(s) => Object::Error(s.clone()),

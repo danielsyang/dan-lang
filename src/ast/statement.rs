@@ -47,8 +47,4 @@ impl Statement {
             Statement::Error(s) => Object::Error(s.clone()),
         }
     }
-
-    pub fn error<S: AsRef<str>>(s: S) -> Statement {
-        return Statement::Error(String::from(s.as_ref()));
-    }
 }

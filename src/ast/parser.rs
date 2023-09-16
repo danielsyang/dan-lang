@@ -97,7 +97,7 @@ impl Parser {
 
     fn parse_let_statement(&mut self) -> Statement {
         if !self.expect_next_token(TokenType::Identifier) {
-            return Statement::error(format!(
+            return Statement::Error(format!(
                 "Expected next token to be TokenType::Identifier, got: {:?}",
                 self.next_token.kind
             ));
@@ -106,7 +106,7 @@ impl Parser {
         let identifier = self.current_token.literal.clone();
 
         if !self.expect_next_token(TokenType::Asssign) {
-            return Statement::error(format!(
+            return Statement::Error(format!(
                 "Expected next token to be TokenType::Assign, got {:?}",
                 self.next_token.kind
             ));
@@ -117,7 +117,7 @@ impl Parser {
         let val = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_next_token(TokenType::Semicolon) {
-            return Statement::error(format!(
+            return Statement::Error(format!(
                 "Expected next token to be TokenType::Semicolon, got {:?}",
                 self.next_token.kind
             ));
@@ -154,7 +154,7 @@ impl Parser {
             }
             TokenType::LeftBrace => self.parse_hashmaps_literal(),
             _ => {
-                return Expression::error(format!(
+                return Expression::Error(format!(
                     "parse_expression: not yet implemented, got {:?}",
                     self.current_token.kind
                 ))
@@ -216,7 +216,7 @@ impl Parser {
         let exp = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_next_token(TokenType::RightParen) {
-            return Expression::error("unexpected next token: TokenType::RightParen");
+            return Expression::Error("unexpected next token: TokenType::RightParen".to_string());
         }
 
         exp
@@ -224,7 +224,7 @@ impl Parser {
 
     fn parse_if_expression(&mut self) -> Expression {
         if !self.expect_next_token(TokenType::LeftParen) {
-            return Expression::error(format!(
+            return Expression::Error(format!(
                 "expected token: TokenType::LeftParen, got: {:?}",
                 self.next_token.kind
             ));
@@ -235,14 +235,14 @@ impl Parser {
         let condition = self.parse_expression(Precedence::Lowest);
 
         if !self.expect_next_token(TokenType::RightParen) {
-            return Expression::error(format!(
+            return Expression::Error(format!(
                 "expected token: TokenType::RightParen, got: {:?}",
                 self.next_token.kind
             ));
         }
 
         if !self.expect_next_token(TokenType::LeftBrace) {
-            return Expression::error(format!(
+            return Expression::Error(format!(
                 "expected token: TokenType::LeftBrace, got: {:?}",
                 self.next_token.kind
             ));
@@ -256,7 +256,7 @@ impl Parser {
             self.consume_token();
 
             if !self.expect_next_token(TokenType::LeftBrace) {
-                return Expression::error(format!(
+                return Expression::Error(format!(
                     "else: expected token: TokenType::LeftBrace, got {:?}",
                     self.next_token.kind
                 ));
@@ -289,7 +289,7 @@ impl Parser {
 
     fn parse_function_expression(&mut self) -> Expression {
         if !self.expect_next_token(TokenType::Identifier) {
-            return Expression::error(format!(
+            return Expression::Error(format!(
                 "expected TokenType::Identifier, got {:?}",
                 self.next_token.kind
             ));
@@ -298,7 +298,7 @@ impl Parser {
         let identifier = self.current_token.literal.clone();
 
         if !self.expect_next_token(TokenType::LeftParen) {
-            return Expression::error(format!(
+            return Expression::Error(format!(
                 "expected TokenType::LeftParen, got {:?}",
                 self.next_token.kind
             ));
@@ -307,14 +307,14 @@ impl Parser {
         let params = self.parse_function_parameters();
 
         if params.is_none() {
-            return Expression::error(format!(
+            return Expression::Error(format!(
                 "expected TokenType::RightParen, got {:?}",
                 self.next_token.kind
             ));
         }
 
         if !self.expect_next_token(TokenType::LeftBrace) {
-            return Expression::error(format!(
+            return Expression::Error(format!(
                 "expected TokenType::LeftParen, got {:?}",
                 self.next_token.kind
             ));
@@ -382,7 +382,7 @@ impl Parser {
         }
 
         if !self.expect_next_token(end.clone()) {
-            Expression::error(format!(
+            Expression::Error(format!(
                 "parse_call_arguments expected {:?}, got {:?}",
                 end, self.next_token.kind
             ));
@@ -410,7 +410,7 @@ impl Parser {
             let key = self.parse_expression(Precedence::Lowest);
 
             if !self.expect_next_token(TokenType::Colon) {
-                return Expression::error(format!(
+                return Expression::Error(format!(
                     "expected TokenType::Colon, got {:?}",
                     self.next_token
                 ));
@@ -424,7 +424,7 @@ impl Parser {
             if self.next_token.kind != TokenType::RightBrace
                 && !self.expect_next_token(TokenType::Comma)
             {
-                return Expression::error(format!(
+                return Expression::Error(format!(
                     "Expected TokenType::Comma, got {:?}",
                     self.next_token
                 ));
@@ -432,7 +432,7 @@ impl Parser {
         }
 
         if !self.expect_next_token(TokenType::RightBrace) {
-            return Expression::error(format!(
+            return Expression::Error(format!(
                 "Expected TokenType::RightBrace, got: {:?}",
                 self.next_token.kind
             ));
