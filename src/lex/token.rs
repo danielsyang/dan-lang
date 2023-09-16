@@ -40,6 +40,8 @@ pub enum TokenType {
     BangSign,
     LT,
     GT,
+    LTE,
+    GTE,
     Eq,
     NotEq,
 }
@@ -152,16 +154,32 @@ impl Token {
             literal: "!".to_string(),
         }
     }
+
     pub fn lt() -> Self {
         Self {
             kind: TokenType::LT,
             literal: "<".to_string(),
         }
     }
+
     pub fn gt() -> Self {
         Self {
             kind: TokenType::GT,
             literal: ">".to_string(),
+        }
+    }
+
+    pub fn lte() -> Self {
+        Self {
+            kind: TokenType::LTE,
+            literal: "<=".to_string(),
+        }
+    }
+
+    pub fn gte() -> Self {
+        Self {
+            kind: TokenType::GTE,
+            literal: ">=".to_string(),
         }
     }
 

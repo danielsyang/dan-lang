@@ -27,6 +27,8 @@ pub enum Operator {
     NotEqual,
     GreaterThan,
     LessThan,
+    GreaterThanOrEqual,
+    LessThanOrEqual,
 }
 
 impl Display for Operator {
@@ -40,6 +42,8 @@ impl Display for Operator {
             Operator::NotEqual => write!(f, "!="),
             Operator::GreaterThan => write!(f, ">"),
             Operator::LessThan => write!(f, "<"),
+            Operator::GreaterThanOrEqual => write!(f, ">="),
+            Operator::LessThanOrEqual => write!(f, "<="),
         }
     }
 }
@@ -167,6 +171,22 @@ impl Expression {
 
                     (Operator::LessThan, _, _) => match (&left, &right) {
                         (Object::Number(l), Object::Number(r)) => Object::Boolean(l < r),
+                        _ => Object::Error(format!(
+                            "Can only perform operation {} on numbers, got: {} and {} ",
+                            op, left, right,
+                        )),
+                    },
+
+                    (Operator::GreaterThanOrEqual, _, _) => match (&left, &right) {
+                        (Object::Number(l), Object::Number(r)) => Object::Boolean(l >= r),
+                        _ => Object::Error(format!(
+                            "Can only perform operation {} on numbers, got: {} and {} ",
+                            op, left, right,
+                        )),
+                    },
+
+                    (Operator::LessThanOrEqual, _, _) => match (&left, &right) {
+                        (Object::Number(l), Object::Number(r)) => Object::Boolean(l <= r),
                         _ => Object::Error(format!(
                             "Can only perform operation {} on numbers, got: {} and {} ",
                             op, left, right,

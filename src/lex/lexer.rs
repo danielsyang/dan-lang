@@ -50,28 +50,20 @@ impl Lexer {
         }
 
         match curr {
-            '=' => {
-                let next = self.peek();
-
-                match next {
-                    Some('=') => {
-                        self.consume_char();
-                        Some(Token::new(TokenType::Eq, "==".to_string()))
-                    }
-                    _ => Some(Token::assign_sign()),
+            '=' => match self.peek() {
+                Some('=') => {
+                    self.consume_char();
+                    Some(Token::new(TokenType::Eq, "==".to_string()))
                 }
-            }
-            '!' => {
-                let next = self.peek();
-
-                match next {
-                    Some('=') => {
-                        self.consume_char();
-                        Some(Token::new(TokenType::NotEq, "!=".to_string()))
-                    }
-                    _ => Some(Token::bang()),
+                _ => Some(Token::assign_sign()),
+            },
+            '!' => match self.peek() {
+                Some('=') => {
+                    self.consume_char();
+                    Some(Token::new(TokenType::NotEq, "!=".to_string()))
                 }
-            }
+                _ => Some(Token::bang()),
+            },
 
             ';' => Some(Token::semicolon()),
             '+' => Some(Token::new(TokenType::PlusSign, curr.to_string())),
@@ -85,8 +77,20 @@ impl Lexer {
             '[' => Some(Token::left_bracket()),
             ']' => Some(Token::right_bracket()),
             ',' => Some(Token::comma()),
-            '<' => Some(Token::lt()),
-            '>' => Some(Token::gt()),
+            '<' => match self.peek() {
+                Some('=') => {
+                    self.consume_char();
+                    Some(Token::lte())
+                }
+                _ => Some(Token::lt()),
+            },
+            '>' => match self.peek() {
+                Some('=') => {
+                    self.consume_char();
+                    Some(Token::gte())
+                }
+                _ => Some(Token::gt()),
+            },
             '"' => Some(Token::string(self.consume_string())),
             ':' => Some(Token::colon()),
             _ => Some(Token::new(TokenType::Illegal, String::from(""))),
@@ -411,6 +415,30 @@ mod test {
             Token::colon(),
             Token::int(10),
             Token::right_brace(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn tokenize_lte_gte() {
+        let input = "
+            1 >= 2;
+            2 <= 1;
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::int(1),
+            Token::gte(),
+            Token::int(2),
+            Token::semicolon(),
+            Token::int(2),
+            Token::lte(),
+            Token::int(1),
+            Token::semicolon(),
             Token::eof(),
         ];
         let result = run_tokenizer(lex);

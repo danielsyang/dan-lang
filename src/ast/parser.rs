@@ -19,7 +19,7 @@ enum Precedence {
     _Int = 0,
     Lowest = 1,
     Equals = 2,
-    LessGreater = 3,
+    LessGreaterOrEqual = 3,
     Sum = 4,
     Product = 5,
     Prefix = 6,
@@ -173,6 +173,10 @@ impl Parser {
                 TokenType::NotEq => self.parse_infix_expression(left_exp, Operator::NotEqual),
                 TokenType::LT => self.parse_infix_expression(left_exp, Operator::LessThan),
                 TokenType::GT => self.parse_infix_expression(left_exp, Operator::GreaterThan),
+                TokenType::LTE => self.parse_infix_expression(left_exp, Operator::LessThanOrEqual),
+                TokenType::GTE => {
+                    self.parse_infix_expression(left_exp, Operator::GreaterThanOrEqual)
+                }
                 TokenType::LeftParen => self.parse_call_expression(left_exp),
                 TokenType::LeftBracket => self.parse_index_expression(left_exp),
                 _ => left_exp,
@@ -445,8 +449,10 @@ impl Parser {
         match self.current_token.kind {
             TokenType::Eq => Precedence::Equals,
             TokenType::NotEq => Precedence::Equals,
-            TokenType::LT => Precedence::LessGreater,
-            TokenType::GT => Precedence::LessGreater,
+            TokenType::LT => Precedence::LessGreaterOrEqual,
+            TokenType::GT => Precedence::LessGreaterOrEqual,
+            TokenType::LTE => Precedence::LessGreaterOrEqual,
+            TokenType::GTE => Precedence::LessGreaterOrEqual,
             TokenType::PlusSign => Precedence::Sum,
             TokenType::MinusSign => Precedence::Sum,
             TokenType::SlashSign => Precedence::Product,
@@ -461,8 +467,10 @@ impl Parser {
         match self.next_token.kind {
             TokenType::Eq => Precedence::Equals as u8,
             TokenType::NotEq => Precedence::Equals as u8,
-            TokenType::LT => Precedence::LessGreater as u8,
-            TokenType::GT => Precedence::LessGreater as u8,
+            TokenType::LT => Precedence::LessGreaterOrEqual as u8,
+            TokenType::GT => Precedence::LessGreaterOrEqual as u8,
+            TokenType::LTE => Precedence::LessGreaterOrEqual as u8,
+            TokenType::GTE => Precedence::LessGreaterOrEqual as u8,
             TokenType::PlusSign => Precedence::Sum as u8,
             TokenType::MinusSign => Precedence::Sum as u8,
             TokenType::SlashSign => Precedence::Product as u8,
@@ -562,6 +570,8 @@ mod test {
         5 < 5;
         5 == 5;
         5 != 5;
+        5 >= 5;
+        5 <= 5;
         foobar + foobar;
         bar - bar;
         bar * bar;
@@ -582,6 +592,8 @@ mod test {
             "< Left Number (5) , Right Number (5)",
             "== Left Number (5) , Right Number (5)",
             "!= Left Number (5) , Right Number (5)",
+            ">= Left Number (5) , Right Number (5)",
+            "<= Left Number (5) , Right Number (5)",
             "+ Left Ident (foobar) , Right Ident (foobar)",
             "- Left Ident (bar) , Right Ident (bar)",
             "* Left Ident (bar) , Right Ident (bar)",

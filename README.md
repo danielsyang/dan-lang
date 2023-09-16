@@ -86,4 +86,5 @@
 
 #### 16 Sept 2023
 
-- [x] Implemented error handling, no more panics
+- [x] Implemented basic error handling, no more panics
+- [x] Implemented LTE and GTE
