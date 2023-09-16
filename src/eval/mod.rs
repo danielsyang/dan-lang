@@ -163,10 +163,10 @@ mod test {
     fn eval_if_else_expression() {
         let mut env = Environment::new();
         let inputs = [
-            "if (true) { 10 };",
-            "if (true) { 10 } else { 20 };",
-            "if (false) { 10 } else { 20 }",
-            "if (false) { 10 };",
+            "if (true) { return 10; };",
+            "if (true) { return 10; } else { return 20; };",
+            "if (false) { return 10; } else { return 20; }",
+            "if (false) { return 10; };",
         ];
         let expected = ["10", "10", "20", "None"];
         for (i, input) in inputs.iter().enumerate() {
