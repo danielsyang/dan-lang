@@ -20,11 +20,12 @@ enum Precedence {
     Lowest = 1,
     Equals = 2,
     LessGreaterOrEqual = 3,
-    Sum = 4,
-    Product = 5,
-    Prefix = 6,
-    Call = 7,
-    Index = 8,
+    AndOr = 4,
+    Sum = 5,
+    Product = 6,
+    Prefix = 7,
+    Call = 8,
+    Index = 9,
 }
 
 pub struct Parser {
@@ -41,7 +42,7 @@ impl Parser {
             }
         }
 
-        Token::new(TokenType::Illegal, String::from("Illegal"))
+        Token::illegal()
     }
 
     fn consume_token(&mut self) {
@@ -173,10 +174,12 @@ impl Parser {
                 TokenType::NotEq => self.parse_infix_expression(left_exp, Operator::NotEqual),
                 TokenType::LT => self.parse_infix_expression(left_exp, Operator::LessThan),
                 TokenType::GT => self.parse_infix_expression(left_exp, Operator::GreaterThan),
-                TokenType::LTE => self.parse_infix_expression(left_exp, Operator::LessThanOrEqual),
-                TokenType::GTE => {
+                TokenType::Lte => self.parse_infix_expression(left_exp, Operator::LessThanOrEqual),
+                TokenType::Gte => {
                     self.parse_infix_expression(left_exp, Operator::GreaterThanOrEqual)
                 }
+                TokenType::And => self.parse_infix_expression(left_exp, Operator::And),
+                TokenType::Or => self.parse_infix_expression(left_exp, Operator::Or),
                 TokenType::LeftParen => self.parse_call_expression(left_exp),
                 TokenType::LeftBracket => self.parse_index_expression(left_exp),
                 _ => left_exp,
@@ -451,8 +454,10 @@ impl Parser {
             TokenType::NotEq => Precedence::Equals,
             TokenType::LT => Precedence::LessGreaterOrEqual,
             TokenType::GT => Precedence::LessGreaterOrEqual,
-            TokenType::LTE => Precedence::LessGreaterOrEqual,
-            TokenType::GTE => Precedence::LessGreaterOrEqual,
+            TokenType::Lte => Precedence::LessGreaterOrEqual,
+            TokenType::Gte => Precedence::LessGreaterOrEqual,
+            TokenType::And => Precedence::AndOr,
+            TokenType::Or => Precedence::AndOr,
             TokenType::PlusSign => Precedence::Sum,
             TokenType::MinusSign => Precedence::Sum,
             TokenType::SlashSign => Precedence::Product,
@@ -469,8 +474,10 @@ impl Parser {
             TokenType::NotEq => Precedence::Equals as u8,
             TokenType::LT => Precedence::LessGreaterOrEqual as u8,
             TokenType::GT => Precedence::LessGreaterOrEqual as u8,
-            TokenType::LTE => Precedence::LessGreaterOrEqual as u8,
-            TokenType::GTE => Precedence::LessGreaterOrEqual as u8,
+            TokenType::Lte => Precedence::LessGreaterOrEqual as u8,
+            TokenType::Gte => Precedence::LessGreaterOrEqual as u8,
+            TokenType::And => Precedence::AndOr as u8,
+            TokenType::Or => Precedence::AndOr as u8,
             TokenType::PlusSign => Precedence::Sum as u8,
             TokenType::MinusSign => Precedence::Sum as u8,
             TokenType::SlashSign => Precedence::Product as u8,
@@ -572,6 +579,8 @@ mod test {
         5 != 5;
         5 >= 5;
         5 <= 5;
+        false && true;
+        true || true;
         foobar + foobar;
         bar - bar;
         bar * bar;
@@ -594,6 +603,8 @@ mod test {
             "!= Left Number (5) , Right Number (5)",
             ">= Left Number (5) , Right Number (5)",
             "<= Left Number (5) , Right Number (5)",
+            "&& Left Bool (false) , Right Bool (true)",
+            "|| Left Bool (true) , Right Bool (true)",
             "+ Left Ident (foobar) , Right Ident (foobar)",
             "- Left Ident (bar) , Right Ident (bar)",
             "* Left Ident (bar) , Right Ident (bar)",

@@ -40,10 +40,12 @@ pub enum TokenType {
     BangSign,
     LT,
     GT,
-    LTE,
-    GTE,
+    Lte,
+    Gte,
     Eq,
     NotEq,
+    And,
+    Or,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -171,14 +173,14 @@ impl Token {
 
     pub fn lte() -> Self {
         Self {
-            kind: TokenType::LTE,
+            kind: TokenType::Lte,
             literal: "<=".to_string(),
         }
     }
 
     pub fn gte() -> Self {
         Self {
-            kind: TokenType::GTE,
+            kind: TokenType::Gte,
             literal: ">=".to_string(),
         }
     }
@@ -215,6 +217,27 @@ impl Token {
         Self {
             kind: TokenType::Colon,
             literal: ":".to_string(),
+        }
+    }
+
+    pub fn illegal() -> Self {
+        Self {
+            kind: TokenType::Illegal,
+            literal: "illegal".to_string(),
+        }
+    }
+
+    pub fn and() -> Self {
+        Self {
+            kind: TokenType::And,
+            literal: "&&".to_string(),
+        }
+    }
+
+    pub fn or() -> Self {
+        Self {
+            kind: TokenType::Or,
+            literal: "||".to_string(),
         }
     }
 }

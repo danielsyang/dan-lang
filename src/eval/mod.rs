@@ -128,9 +128,16 @@ mod test {
             "true != true;",
             "1 + 2 == 3;",
             "1 + 2 == 2 + 1;",
+            "1 >= 1",
+            "1 <= 2",
+            "true && true",
+            "true || false",
+            "false && false",
+            "(false || true) || false",
         ];
         let expected = [
             "true", "false", "true", "false", "false", "true", "true", "false", "true", "true",
+            "true", "true", "true", "true", "false", "true",
         ];
 
         for (i, input) in inputs.iter().enumerate() {

@@ -93,7 +93,23 @@ impl Lexer {
             },
             '"' => Some(Token::string(self.consume_string())),
             ':' => Some(Token::colon()),
-            _ => Some(Token::new(TokenType::Illegal, String::from(""))),
+            '&' => match self.peek() {
+                Some('&') => {
+                    self.consume_char();
+                    Some(Token::and())
+                }
+                // Bitwise operation
+                _ => Some(Token::illegal()),
+            },
+            '|' => match self.peek() {
+                Some('|') => {
+                    self.consume_char();
+                    Some(Token::or())
+                }
+                // Bitwise operation
+                _ => Some(Token::illegal()),
+            },
+            _ => Some(Token::illegal()),
         }
     }
 
@@ -121,7 +137,7 @@ impl Lexer {
 
             match self.peek() {
                 Some(d) => {
-                    if !d.is_alphabetic() {
+                    if !d.is_alphanumeric() {
                         break;
                     }
                 }
@@ -212,6 +228,7 @@ mod test {
         let input = "
             let x = 512;
             let y = 256;
+            let x1 = 128;
         ";
 
         let lex = Lexer::new(input);
@@ -225,6 +242,11 @@ mod test {
             Token::identifier("y".to_string()),
             Token::assign_sign(),
             Token::int(256),
+            Token::semicolon(),
+            Token::new_let(),
+            Token::identifier("x1".to_string()),
+            Token::assign_sign(),
+            Token::int(128),
             Token::semicolon(),
             Token::eof(),
         ];
@@ -438,6 +460,30 @@ mod test {
             Token::int(2),
             Token::lte(),
             Token::int(1),
+            Token::semicolon(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn tokenize_and_or() {
+        let input = "
+            5 && 5;
+            5 || 5;
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::int(5),
+            Token::and(),
+            Token::int(5),
+            Token::semicolon(),
+            Token::int(5),
+            Token::or(),
+            Token::int(5),
             Token::semicolon(),
             Token::eof(),
         ];
