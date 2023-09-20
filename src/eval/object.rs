@@ -14,7 +14,7 @@ pub enum Object {
     Return(Box<Object>),
     Error(String),
     Function {
-        name: Identifier,
+        name: Option<Identifier>,
         parameters: Vec<Identifier>,
         body: Block,
     },
@@ -76,11 +76,11 @@ impl Display for Object {
                 name,
                 parameters,
                 body,
-            } => {
-                write!(
+            } => match name {
+                Some(n) => write!(
                     f,
                     "Fn {} ( {} ) {{ {} }}",
-                    name,
+                    n,
                     parameters
                         .iter()
                         .map(|p| p.to_string())
@@ -90,8 +90,21 @@ impl Display for Object {
                         .map(|sttm| sttm.to_string())
                         .collect::<Vec<_>>()
                         .join("\n")
-                )
-            }
+                ),
+                None => write!(
+                    f,
+                    "Fn ( {} ) {{ {} }}",
+                    parameters
+                        .iter()
+                        .map(|p| p.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    body.iter()
+                        .map(|sttm| sttm.to_string())
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                ),
+            },
             Object::Builtin { func: _ } => write!(f, ""),
             Object::Array(elements) => write!(
                 f,

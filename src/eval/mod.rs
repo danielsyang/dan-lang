@@ -239,8 +239,9 @@ mod test {
         let inputs = [
             "fn abc(x) { return x * x; }; abc(5);",
             "fn add(x, y) { return x + y; }; add(5 + 5, add(5, 5));",
+            "let abc = fn(x) { return x * x; }; abc(5)",
         ];
-        let expected = ["25", "20"];
+        let expected = ["25", "20", "25"];
 
         for (i, input) in inputs.iter().enumerate() {
             let program = Parser::build_ast(input);

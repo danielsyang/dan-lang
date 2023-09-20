@@ -295,14 +295,42 @@ impl Parser {
     }
 
     fn parse_function_expression(&mut self) -> Expression {
-        if !self.expect_next_token(TokenType::Identifier) {
-            return Expression::Error(format!(
-                "expected TokenType::Identifier, got {:?}",
-                self.next_token.kind
-            ));
-        }
+        if self.next_token.kind == TokenType::Identifier {
+            self.consume_token();
 
-        let identifier = self.current_token.literal.clone();
+            let identifier = self.current_token.literal.clone();
+
+            if !self.expect_next_token(TokenType::LeftParen) {
+                return Expression::Error(format!(
+                    "expected TokenType::LeftParen, got {:?}",
+                    self.next_token.kind
+                ));
+            }
+
+            let params = self.parse_function_parameters();
+
+            if params.is_none() {
+                return Expression::Error(format!(
+                    "expected TokenType::RightParen, got {:?}",
+                    self.next_token.kind
+                ));
+            }
+
+            if !self.expect_next_token(TokenType::LeftBrace) {
+                return Expression::Error(format!(
+                    "expected TokenType::LeftParen, got {:?}",
+                    self.next_token.kind
+                ));
+            }
+
+            let body = self.parse_block_statement();
+
+            return Expression::Function {
+                identifier: Some(identifier),
+                parameters: params.unwrap(),
+                body,
+            };
+        }
 
         if !self.expect_next_token(TokenType::LeftParen) {
             return Expression::Error(format!(
@@ -330,7 +358,7 @@ impl Parser {
         let body = self.parse_block_statement();
 
         Expression::Function {
-            identifier,
+            identifier: None,
             parameters: params.unwrap(),
             body,
         }

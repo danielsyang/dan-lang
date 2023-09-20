@@ -89,3 +89,7 @@
 - [x] Implemented basic error handling, no more panics
 - [x] Implemented LTE and GTE
 - [x] Implemented And and Or
+
+#### 20 Sept 2023
+
+- [x] Arrow functions.

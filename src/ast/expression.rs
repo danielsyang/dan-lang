@@ -80,7 +80,7 @@ pub enum Expression {
         alternative: Option<Block>,
     },
     Function {
-        identifier: Identifier,
+        identifier: Option<Identifier>,
         parameters: Vec<Identifier>,
         body: Block,
     },
@@ -251,12 +251,23 @@ impl Expression {
                 parameters,
                 body,
             } => {
-                let fun = Object::Function {
-                    name: identifier.clone(),
-                    parameters: parameters.to_vec().clone(),
-                    body: body.to_vec().clone(),
+                let fun = match identifier {
+                    Some(i) => Object::Function {
+                        name: Some(i.clone()),
+                        parameters: parameters.to_vec().clone(),
+                        body: body.to_vec().clone(),
+                    },
+                    None => Object::Function {
+                        name: None,
+                        parameters: parameters.to_vec().clone(),
+                        body: body.to_vec().clone(),
+                    },
                 };
-                env.set(identifier.clone(), fun.clone());
+
+                match identifier {
+                    Some(i) => env.set(i.clone(), fun.clone()),
+                    None => {}
+                }
 
                 fun
             }
@@ -415,16 +426,27 @@ impl Display for Expression {
                 identifier,
                 parameters,
                 body,
-            } => write!(
-                f,
-                "Fn {} ( {} ) {}",
-                identifier,
-                parameters.join(", "),
-                body.iter()
-                    .map(|b| b.to_string())
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
+            } => match identifier {
+                Some(i) => write!(
+                    f,
+                    "Fn {} ( {} ) {}",
+                    i.clone(),
+                    parameters.join(", "),
+                    body.iter()
+                        .map(|b| b.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ),
+                None => write!(
+                    f,
+                    "Fn ( {} ) {}",
+                    parameters.join(", "),
+                    body.iter()
+                        .map(|b| b.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ),
+            },
 
             Expression::Call {
                 function,
