@@ -221,6 +221,19 @@ mod test {
     }
 
     #[test]
+    fn eval_reassign_statements() {
+        let mut env = Environment::new();
+        let inputs = ["let a = 5; a = 10; a;", "b = 10;"];
+        let expected = ["10", "error: Identifier not found: b"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let program = Parser::build_ast(input);
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
     fn eval_function_block() {
         let mut env = Environment::new();
         let inputs = ["fn abc(x) { x + 2; };"];

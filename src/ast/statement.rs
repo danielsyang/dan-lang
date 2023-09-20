@@ -10,6 +10,7 @@ pub type Identifier = String;
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Statement {
     Let(Identifier, Expression),
+    Assignment(Identifier, Expression),
     Return(Expression),
     Expression(Expression),
     Error(String),
@@ -19,6 +20,7 @@ impl Display for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Statement::Let(identifier, exp) => write!(f, "Let {} {}", identifier, exp),
+            Statement::Assignment(identifier, exp) => write!(f, "= {} {}", identifier, exp),
             Statement::Return(exp) => {
                 write!(f, "Return {}", exp)
             }
@@ -43,6 +45,17 @@ impl Statement {
                 env.set(ident.clone(), val.clone());
 
                 val
+            }
+            Statement::Assignment(ident, exp) => {
+                let val = exp.eval(env);
+
+                match env.get(ident.clone()) {
+                    Some(_) => {
+                        env.set(ident.clone(), val.clone());
+                        val
+                    }
+                    None => Object::Error(format!("Identifier not found: {}", ident)),
+                }
             }
             Statement::Error(s) => Object::Error(s.clone()),
         }

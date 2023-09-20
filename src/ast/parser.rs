@@ -89,9 +89,10 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> Statement {
-        match self.current_token.kind {
-            TokenType::Let => self.parse_let_statement(),
-            TokenType::Return => self.parse_return_statement(),
+        match (&self.current_token.kind, &self.next_token.kind) {
+            (TokenType::Let, _) => self.parse_let_statement(),
+            (TokenType::Return, _) => self.parse_return_statement(),
+            (TokenType::Identifier, TokenType::Asssign) => self.parse_assignment_statement(),
             _ => self.parse_expression_statement(),
         }
     }
@@ -137,6 +138,20 @@ impl Parser {
         }
 
         Statement::Return(return_val)
+    }
+
+    fn parse_assignment_statement(&mut self) -> Statement {
+        let identifer = self.current_token.literal.clone();
+        self.consume_token();
+        self.consume_token();
+
+        let exp = self.parse_expression(Precedence::Lowest);
+
+        if self.next_token.kind == TokenType::Semicolon {
+            self.consume_token();
+        }
+
+        Statement::Assignment(identifer, exp)
     }
 
     fn parse_expression(&mut self, p: Precedence) -> Expression {
