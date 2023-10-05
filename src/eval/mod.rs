@@ -70,6 +70,31 @@ pub fn eval_block(block: &Block, env: &mut Environment) -> Object {
     result
 }
 
+pub fn eval_function_block(block: &Block, env: &mut Environment) -> Option<Object> {
+    for sttm in block {
+        match sttm.eval(env) {
+            Object::Return(r) => {
+                let mut result = r.as_ref().clone();
+
+                loop {
+                    match &result {
+                        Object::Return(l) => {
+                            result = l.as_ref().clone();
+                        }
+
+                        _ => break,
+                    };
+                }
+
+                return Some(result);
+            }
+            _ => sttm.eval(env),
+        };
+    }
+
+    None
+}
+
 pub fn builtin_functions() -> Environment {
     let len_func = Object::Builtin { func: builtin_len };
     let first_func = Object::Builtin {
@@ -267,7 +292,13 @@ mod test {
     fn eval_function_closures() {
         let mut env = Environment::new();
         let inputs = [
-            // "fn abc(x) { fn inner(y) { x + y; }; }; let first = abc(2); first(2);",
+            "fn abc(x) {
+                return fn inner(y) { 
+                    return x + y; 
+                };
+            };
+            let first = abc(2);
+            first(2);",
             "let abcd = fn(a, b) {
                 let c = a + b;
 

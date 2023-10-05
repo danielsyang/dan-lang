@@ -38,14 +38,6 @@ impl Statement {
             Statement::Expression(exp) => exp.eval(env),
             Statement::Return(r) => {
                 let result = r.eval(env);
-
-                println!("HERER: {}", result);
-
-                // loop {
-                //     match result {
-
-                //     }
-                // }
                 Object::Return(Box::new(result))
             }
             Statement::Let(ident, exp) => {

@@ -6,7 +6,7 @@ use std::{
 
 use crate::eval::{
     env::Environment,
-    eval_block,
+    eval_block, eval_function_block,
     object::{CustomHash, HashKey, Object},
 };
 
@@ -306,7 +306,10 @@ impl Expression {
                             return Object::Error(format!("Missing parameter: {}", error_idx));
                         }
 
-                        eval_block(&body, env)
+                        match eval_function_block(&body, env) {
+                            Some(r) => r,
+                            None => Object::None,
+                        }
                     }
                     (Object::Builtin { func }, _) => func(args),
                     (_, _) => Object::Error(format!("not a valid call {} ", self)),
