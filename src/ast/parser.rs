@@ -854,4 +854,33 @@ mod test {
             assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
         }
     }
+
+    #[test]
+    fn parse_closure() {
+        let input = "
+        let a = fn() {
+            let b = fn(a) {
+                return a;
+            };
+            return b;
+        };
+
+        let c = fn() {
+            fn d(a) {
+                return a;
+            };
+            return d;
+        };
+        ";
+
+        let expected = [
+            "Let a Fn (  ) Let b Fn ( a ) Return Ident (a), Return Ident (b)",
+            "Let c Fn (  ) Fn d ( a ) Return Ident (a), Return Ident (d)",
+        ];
+        let result = Parser::build_ast(input);
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
 }

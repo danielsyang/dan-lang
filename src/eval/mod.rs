@@ -266,8 +266,21 @@ mod test {
     #[test]
     fn eval_function_closures() {
         let mut env = Environment::new();
-        let inputs = ["fn abc(x) { fn inner(y) { x + y; }; }; let first = abc(2); first(2)"];
-        let expected = ["4"];
+        let inputs = [
+            // "fn abc(x) { fn inner(y) { x + y; }; }; let first = abc(2); first(2);",
+            "let abcd = fn(a, b) {
+                let c = a + b;
+
+                fn inner(d) { 
+                    return c + d; 
+                };
+
+                return inner;
+            }; 
+            let first = abcd(2, 2);
+            first(2);",
+        ];
+        let expected = ["4", "6"];
 
         for (i, input) in inputs.iter().enumerate() {
             let program = Parser::build_ast(input);

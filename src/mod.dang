@@ -1,0 +1,9 @@
+fn test() {
+    fn test2() {
+        return 1;
+    }
+    test2;
+}
+
+let t = test();
+t()

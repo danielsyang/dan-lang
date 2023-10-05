@@ -491,4 +491,81 @@ mod test {
 
         assert_eq!(expected, result)
     }
+
+    #[test]
+    fn closures() {
+        let input = "
+            let closure = fn(a, b) {
+                let c = a + b;
+                return fn(d) {
+                    return c + d;
+                };
+            };
+
+            let closure2 = fn() {
+                fn test() {
+
+                }
+                return test;
+            };
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::new_let(),
+            Token::identifier("closure".into()),
+            Token::assign_sign(),
+            Token::function(),
+            Token::left_paren(),
+            Token::identifier("a".into()),
+            Token::comma(),
+            Token::identifier("b".into()),
+            Token::right_paren(),
+            Token::left_brace(),
+            Token::new_let(),
+            Token::identifier("c".into()),
+            Token::assign_sign(),
+            Token::identifier("a".into()),
+            Token::new(TokenType::PlusSign, "+".into()),
+            Token::identifier("b".into()),
+            Token::semicolon(),
+            Token::new(TokenType::Return, "return".into()),
+            Token::function(),
+            Token::left_paren(),
+            Token::identifier("d".into()),
+            Token::right_paren(),
+            Token::left_brace(),
+            Token::new(TokenType::Return, "return".into()),
+            Token::identifier("c".into()),
+            Token::new(TokenType::PlusSign, "+".into()),
+            Token::identifier("d".into()),
+            Token::semicolon(),
+            Token::right_brace(),
+            Token::semicolon(),
+            Token::right_brace(),
+            Token::semicolon(),
+            Token::new_let(),
+            Token::identifier("closure2".into()),
+            Token::assign_sign(),
+            Token::function(),
+            Token::left_paren(),
+            Token::right_paren(),
+            Token::left_brace(),
+            Token::function(),
+            Token::identifier("test".into()),
+            Token::left_paren(),
+            Token::right_paren(),
+            Token::left_brace(),
+            Token::right_brace(),
+            Token::new(TokenType::Return, "return".into()),
+            Token::identifier("test".into()),
+            Token::semicolon(),
+            Token::right_brace(),
+            Token::semicolon(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
 }
