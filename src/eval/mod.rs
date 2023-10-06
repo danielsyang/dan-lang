@@ -76,14 +76,8 @@ pub fn eval_function_block(block: &Block, env: &mut Environment) -> Option<Objec
             Object::Return(r) => {
                 let mut result = r.as_ref().clone();
 
-                loop {
-                    match &result {
-                        Object::Return(l) => {
-                            result = l.as_ref().clone();
-                        }
-
-                        _ => break,
-                    };
+                while let Object::Return(l) = &result {
+                    result = l.as_ref().clone();
                 }
 
                 return Some(result);
@@ -278,8 +272,12 @@ mod test {
             "fn abc(x) { return x * x; }; abc(5);",
             "fn add(x, y) { return x + y; }; add(5 + 5, add(5, 5));",
             "let abc = fn(x) { return x * x; }; abc(5)",
+            "let a = fn() {
+                let b = 10;
+                return b + 10;
+            }; a()"
         ];
-        let expected = ["25", "20", "25"];
+        let expected = ["25", "20", "25", "20"];
 
         for (i, input) in inputs.iter().enumerate() {
             let program = Parser::build_ast(input);

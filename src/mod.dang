@@ -1,9 +1,11 @@
-fn test() {
-    fn test2() {
-        return 1;
-    }
-    test2;
-}
 
-let t = test();
-t()
+let b = 30;
+
+let a = fn() {
+    b = 10;
+    return b + 10;
+};
+a();
+
+b + 1;
+
