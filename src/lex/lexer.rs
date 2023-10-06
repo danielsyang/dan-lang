@@ -40,6 +40,7 @@ impl Lexer {
                 "return" => return Some(Token::new(TokenType::Return, word)),
                 "if" => return Some(Token::new(TokenType::If, word)),
                 "else" => return Some(Token::new(TokenType::Else, word)),
+                "while" => return Some(Token::while()),
                 _ => return Some(Token::identifier(word)),
             }
         }

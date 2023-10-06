@@ -93,6 +93,7 @@ impl Parser {
             (TokenType::Let, _) => self.parse_let_statement(),
             (TokenType::Return, _) => self.parse_return_statement(),
             (TokenType::Identifier, TokenType::Asssign) => self.parse_assignment_statement(),
+            (TokenType::While, _) => self.parse_while_statement(),
             _ => self.parse_expression_statement(),
         }
     }
@@ -152,6 +153,42 @@ impl Parser {
         }
 
         Statement::Assignment(identifer, exp)
+    }
+
+    fn parse_while_statement(&mut self) -> Statement {
+        if !self.expect_next_token(TokenType::LeftParen) {
+            return Statement::Error(format!(
+                "Expected next token to be TokenType::LeftParen, got: {:?}",
+                self.next_token.kind
+            ));
+        }
+
+        let condition = self.parse_expression(Precedence::Lowest);
+
+        if !self.expect_next_token(TokenType::RightParen) {
+            return Statement::Error(format!(
+                "Expected next token to be TokenType::RightParen, got {:?}",
+                self.next_token.kind
+            ));
+        }
+
+        if !self.expect_next_token(TokenType::LeftBrace) {
+            return Statement::Error(format!(
+                "Expected next token to be TokenType::LeftBrace, got {:?}",
+                self.next_token.kind
+            ));
+        }
+
+        let body = self.parse_block_statement();
+
+        if !self.expect_next_token(TokenType::RightBrace) {
+            return Statement::Error(format!(
+                "Expected next token to be TokenType::LeftBrace, got {:?}",
+                self.next_token.kind
+            ));
+        }
+
+        Statement::While { condition, body }
     }
 
     fn parse_expression(&mut self, p: Precedence) -> Expression {

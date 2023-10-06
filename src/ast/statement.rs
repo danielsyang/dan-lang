@@ -14,6 +14,7 @@ pub enum Statement {
     Return(Expression),
     Expression(Expression),
     Error(String),
+    While { condition: Expression, body: Block },
 }
 
 impl Display for Statement {
@@ -28,6 +29,7 @@ impl Display for Statement {
                 write!(f, "{}", exp)
             }
             Statement::Error(s) => write!(f, "error: ( {} )", s),
+            Statement::While { condition, body } => write!(f, "while ( {{}} ) { { } }"),
         }
     }
 }
@@ -58,6 +60,7 @@ impl Statement {
                 }
             }
             Statement::Error(s) => Object::Error(s.clone()),
+            Statement::While { condition, body } => todo!("Eval WHILE"),
         }
     }
 }

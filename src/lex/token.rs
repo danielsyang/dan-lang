@@ -46,6 +46,8 @@ pub enum TokenType {
     NotEq,
     And,
     Or,
+
+    While,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -238,6 +240,13 @@ impl Token {
         Self {
             kind: TokenType::Or,
             literal: "||".to_string(),
+        }
+    }
+
+    pub fn while() -> Self {
+        Self {
+            kind: TokenType::While,
+            literal: "while".into(),
         }
     }
 }
