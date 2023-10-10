@@ -243,7 +243,7 @@ impl Token {
         }
     }
 
-    pub fn while() -> Self {
+    pub fn while_token() -> Self {
         Self {
             kind: TokenType::While,
             literal: "while".into(),

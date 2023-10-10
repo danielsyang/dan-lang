@@ -40,7 +40,7 @@ impl Lexer {
                 "return" => return Some(Token::new(TokenType::Return, word)),
                 "if" => return Some(Token::new(TokenType::If, word)),
                 "else" => return Some(Token::new(TokenType::Else, word)),
-                "while" => return Some(Token::while()),
+                "while" => return Some(Token::while_token()),
                 _ => return Some(Token::identifier(word)),
             }
         }
@@ -563,6 +563,34 @@ mod test {
             Token::semicolon(),
             Token::right_brace(),
             Token::semicolon(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+
+    #[test]
+    fn while_statements() {
+        let input = "
+            while (true) {
+                let a = 0;
+            }
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::while_token(),
+            Token::left_paren(),
+            Token::boolean(true),
+            Token::right_paren(),
+            Token::left_brace(),
+            Token::new_let(),
+            Token::identifier("a".into()),
+            Token::assign_sign(),
+            Token::int(0),
+            Token::semicolon(),
+            Token::right_brace(),
             Token::eof(),
         ];
         let result = run_tokenizer(lex);

@@ -165,13 +165,6 @@ impl Parser {
 
         let condition = self.parse_expression(Precedence::Lowest);
 
-        if !self.expect_next_token(TokenType::RightParen) {
-            return Statement::Error(format!(
-                "Expected next token to be TokenType::RightParen, got {:?}",
-                self.next_token.kind
-            ));
-        }
-
         if !self.expect_next_token(TokenType::LeftBrace) {
             return Statement::Error(format!(
                 "Expected next token to be TokenType::LeftBrace, got {:?}",
@@ -180,13 +173,6 @@ impl Parser {
         }
 
         let body = self.parse_block_statement();
-
-        if !self.expect_next_token(TokenType::RightBrace) {
-            return Statement::Error(format!(
-                "Expected next token to be TokenType::LeftBrace, got {:?}",
-                self.next_token.kind
-            ));
-        }
 
         Statement::While { condition, body }
     }
@@ -914,6 +900,23 @@ mod test {
             "Let a Fn (  ) Let b Fn ( a ) Return Ident (a), Return Ident (b)",
             "Let c Fn (  ) Fn d ( a ) Return Ident (a), Return Ident (d)",
         ];
+        let result = Parser::build_ast(input);
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_while_statements() {
+        let input = "
+            while (i < 10) {
+                let a = 0;
+                a = 11;
+            }
+        ";
+
+        let expected = ["while ( < Left Ident (i) , Right Number (10) ) { [Let(\"a\", Literal(Number(0))), Assignment(\"a\", Literal(Number(11)))] }"];
         let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {

@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::eval::{env::Environment, object::Object};
+use crate::eval::{env::Environment, eval_block, object::Object};
 
 use super::expression::Expression;
 
@@ -29,7 +29,9 @@ impl Display for Statement {
                 write!(f, "{}", exp)
             }
             Statement::Error(s) => write!(f, "error: ( {} )", s),
-            Statement::While { condition, body } => write!(f, "while ( {{}} ) { { } }"),
+            Statement::While { condition, body } => {
+                write!(f, "while ( {} ) {{ {:?} }}", condition, body)
+            }
         }
     }
 }
@@ -60,7 +62,20 @@ impl Statement {
                 }
             }
             Statement::Error(s) => Object::Error(s.clone()),
-            Statement::While { condition, body } => todo!("Eval WHILE"),
+            Statement::While { condition, body } => {
+                loop {
+                    let assertion = condition.eval(env);
+
+                    match assertion {
+                        Object::Boolean(true) => {
+                            eval_block(body, env);
+                        }
+                        _ => break,
+                    }
+                }
+
+                Object::None
+            }
         }
     }
 }

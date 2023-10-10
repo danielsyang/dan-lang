@@ -275,7 +275,7 @@ mod test {
             "let a = fn() {
                 let b = 10;
                 return b + 10;
-            }; a()"
+            }; a()",
         ];
         let expected = ["25", "20", "25", "20"];
 
@@ -381,6 +381,50 @@ mod test {
         let inputs =
             ["let a = {\"one\": 10 - 9, \"two\": (1 * 1) + 1, 3: \"three\" }; a[\"one\"];"];
         let expected = ["1"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let program = Parser::build_ast(input);
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn eval_while_loops() {
+        let mut env = Environment::new();
+        let inputs = ["
+        let i = 0;
+        while (i < 10) {
+            i = i + 1;
+        }
+        i;
+        "];
+        let expected = ["10"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let program = Parser::build_ast(input);
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn eval_while_condition_expression() {
+        let mut env = Environment::new();
+        let inputs = ["
+        let i = 0;
+        fn isBigger(i) {
+            if (i < 10) {
+                return true;
+            }
+            return false;
+        }
+        while (isBigger(i)) {
+            i = i + 1;
+        }
+        i;
+        "];
+        let expected = ["10"];
 
         for (i, input) in inputs.iter().enumerate() {
             let program = Parser::build_ast(input);

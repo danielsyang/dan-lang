@@ -94,3 +94,14 @@
 
 - [x] Arrow functions.
 - [x] Reassignment statements.
+
+#### 05 Oct 2023
+
+- [x] Fix: Closures
+- [x] Fix: Return statmets, function body (block) must explicitly return a expression, if/else block implicitly return something (may change in the future)
+
+#### xx Oct 2023
+
+- [] Fix: Static Scopes
+- [] Implemented While loops
+- [] Implemented (.) operators
