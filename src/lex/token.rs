@@ -3,6 +3,7 @@ use std::fmt::Debug;
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]
 pub enum TokenType {
     Comma,
+    Dot,
     Semicolon,
     Colon,
     Eof,
@@ -247,6 +248,13 @@ impl Token {
         Self {
             kind: TokenType::While,
             literal: "while".into(),
+        }
+    }
+
+    pub fn dot() -> Self {
+        Self {
+            kind: TokenType::Dot,
+            literal: ".".into(),
         }
     }
 }

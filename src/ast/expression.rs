@@ -96,6 +96,10 @@ pub enum Expression {
     HashMap {
         pairs: BTreeMap<Expression, Expression>,
     },
+    Dot {
+        identifier: Box<Expression>,
+        attribute: Identifier,
+    },
 }
 
 impl Expression {
@@ -380,6 +384,26 @@ impl Expression {
 
                 Object::HashMap { pairs: hm }
             }
+            Expression::Dot {
+                identifier,
+                attribute,
+            } => {
+                // For now "dot" operations only works on hashMaps
+                let hashmap = identifier.eval(env);
+
+                match hashmap {
+                    Object::HashMap { pairs } => {
+                        match pairs.get(&HashKey::new(attribute.clone())) {
+                            Some(v) => v.clone(),
+                            None => Object::None,
+                        }
+                    }
+                    _ => Object::Error(format!(
+                        "Cannot read {:?} propertie of {}",
+                        attribute, identifier
+                    )),
+                }
+            }
         }
     }
 }
@@ -487,6 +511,12 @@ impl Display for Expression {
                     .join(", ");
 
                 write!(f, "{{ {} }}", expr)
+            }
+            Expression::Dot {
+                identifier,
+                attribute,
+            } => {
+                write!(f, "{} of {}", attribute, identifier)
             }
         }
     }

@@ -18,14 +18,15 @@ use super::{
 enum Precedence {
     _Int = 0,
     Lowest = 1,
-    Equals = 2,
-    LessGreaterOrEqual = 3,
-    AndOr = 4,
-    Sum = 5,
-    Product = 6,
-    Prefix = 7,
-    Call = 8,
-    Index = 9,
+    Dot = 2,
+    Equals = 3,
+    LessGreaterOrEqual = 4,
+    AndOr = 5,
+    Sum = 6,
+    Product = 7,
+    Prefix = 8,
+    Call = 9,
+    Index = 10,
 }
 
 pub struct Parser {
@@ -220,6 +221,7 @@ impl Parser {
                 TokenType::Or => self.parse_infix_expression(left_exp, Operator::Or),
                 TokenType::LeftParen => self.parse_call_expression(left_exp),
                 TokenType::LeftBracket => self.parse_index_expression(left_exp),
+                TokenType::Dot => self.parse_dot_expression(left_exp),
                 _ => left_exp,
             };
         }
@@ -475,6 +477,31 @@ impl Parser {
         }
     }
 
+    fn parse_dot_expression(&mut self, left: Expression) -> Expression {
+        if !self.expect_next_token(TokenType::Dot) {
+            return Expression::Error(format!(
+                "expected TokenType::Dot, got {:?}",
+                self.next_token
+            ));
+        }
+
+        self.consume_token();
+
+        let attribute = self.parse_expression(Precedence::Lowest);
+
+        match attribute {
+            Expression::Identifier(name) => {
+                self.consume_token();
+
+                Expression::Dot {
+                    identifier: Box::new(left),
+                    attribute: name,
+                }
+            }
+            _ => Expression::Error(format!("Attribute is not valid, got {:?}", attribute)),
+        }
+    }
+
     fn parse_hashmaps_literal(&mut self) -> Expression {
         let mut btm: BTreeMap<Expression, Expression> = BTreeMap::new();
 
@@ -530,6 +557,7 @@ impl Parser {
             TokenType::MultiplicationSign => Precedence::Product,
             TokenType::LeftParen => Precedence::Call,
             TokenType::LeftBracket => Precedence::Index,
+            TokenType::Dot => Precedence::Dot,
             _ => Precedence::Lowest,
         }
     }
@@ -550,6 +578,7 @@ impl Parser {
             TokenType::MultiplicationSign => Precedence::Product as u8,
             TokenType::LeftParen => Precedence::Call as u8,
             TokenType::LeftBracket => Precedence::Index as u8,
+            TokenType::Dot => Precedence::Dot as u8,
             _ => Precedence::Lowest as u8,
         }
     }
@@ -917,6 +946,20 @@ mod test {
         ";
 
         let expected = ["while ( < Left Ident (i) , Right Number (10) ) { [Let(\"a\", Literal(Number(0))), Assignment(\"a\", Literal(Number(11)))] }"];
+        let result = Parser::build_ast(input);
+
+        for (i, curr) in result.statements.iter().enumerate() {
+            assert_eq!(curr.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn parse_dot_expressions() {
+        let input = "
+            myIdentifier.myAttribute;
+        ";
+
+        let expected = ["myAttribute of Ident (myIdentifier)"];
         let result = Parser::build_ast(input);
 
         for (i, curr) in result.statements.iter().enumerate() {

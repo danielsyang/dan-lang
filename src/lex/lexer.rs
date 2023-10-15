@@ -65,7 +65,7 @@ impl Lexer {
                 }
                 _ => Some(Token::bang()),
             },
-
+            '.' => Some(Token::dot()),
             ';' => Some(Token::semicolon()),
             '+' => Some(Token::new(TokenType::PlusSign, curr.to_string())),
             '-' => Some(Token::new(TokenType::MinusSign, curr.to_string())),
@@ -591,6 +591,24 @@ mod test {
             Token::int(0),
             Token::semicolon(),
             Token::right_brace(),
+            Token::eof(),
+        ];
+        let result = run_tokenizer(lex);
+
+        assert_eq!(expected, result)
+    }
+    #[test]
+    fn dot_operator() {
+        let input = "
+        test.interval;
+        ";
+
+        let lex = Lexer::new(input);
+        let expected: Vec<Token> = vec![
+            Token::identifier("test".into()),
+            Token::dot(),
+            Token::identifier("interval".into()),
+            Token::semicolon(),
             Token::eof(),
         ];
         let result = run_tokenizer(lex);

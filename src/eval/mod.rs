@@ -432,4 +432,44 @@ mod test {
             assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
         }
     }
+
+    #[test]
+    fn eval_dot_expressions() {
+        let mut env = Environment::new();
+        let inputs = ["
+            let myHashMap = {
+                \"one\": 1,
+                \"two\": 2,
+            };
+
+            myHashMap.one;
+        "];
+        let expected = ["1"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let program = Parser::build_ast(input);
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
+
+    #[test]
+    fn eval_dot_expressions_none() {
+        let mut env = Environment::new();
+        let inputs = ["
+            let myHashMap = {
+                \"one\": 1,
+                \"two\": 2,
+            };
+
+            myHashMap.none;
+        "];
+        let expected = ["None"];
+
+        for (i, input) in inputs.iter().enumerate() {
+            let program = Parser::build_ast(input);
+            let result = program.eval_statements(&mut env);
+            assert_eq!(result.to_string(), expected.get(i).unwrap().to_string());
+        }
+    }
 }

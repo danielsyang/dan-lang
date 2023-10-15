@@ -102,6 +102,8 @@
 
 #### 09 Oct 2023
 
-- [] Fix: Static Scopes
 - [x] Implemented While loops
-- [] Implemented (.) operators
+
+#### 15 Oct 2023
+
+- [x] Implemented (.) operation
